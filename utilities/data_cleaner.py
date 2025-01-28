@@ -66,6 +66,4 @@ class DataCleaner(object):  # new file
             if result["metric"] == metric:
                 return index
 
-            return None
-
         return None
