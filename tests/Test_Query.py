@@ -3,8 +3,6 @@ import unittest
 from datetime import datetime as dt
 from datetime import timedelta as td
 
-# from unittest.mock import MagicMock
-
 from utilities import Query
 
 API_ENDPOINT = "https://metrics-internal.qa-de-1.cloud.sap/api/v1/"
