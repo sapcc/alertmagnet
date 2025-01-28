@@ -22,20 +22,23 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
-    def test_remove_state_from_timestamp_value_with_wrong_inputs(self):
-        data1 = "ABAP"
-        data2 = ["ABAP"]
-        data3 = [["ABAP"]]
-
-        # TODO good practice?
-        with self.assertRaises(TypeError):
-            remove_state_from_timestamp_value(data=data1)
+    def test_remove_state_from_timestamp_value_with_wrong_inputs_1(self):
+        data = "ABAP"
 
         with self.assertRaises(TypeError):
-            remove_state_from_timestamp_value(data=data2)
+            remove_state_from_timestamp_value(data=data)
+
+    def test_remove_state_from_timestamp_value_with_wrong_inputs_2(self):
+        data = ["ABAP"]
 
         with self.assertRaises(TypeError):
-            remove_state_from_timestamp_value(data=data3)
+            remove_state_from_timestamp_value(data=data)
+
+    def test_remove_state_from_timestamp_value_with_wrong_inputs_3(self):
+        data = [["ABAP"]]
+
+        with self.assertRaises(TypeError):
+            remove_state_from_timestamp_value(data=data)
 
     def test_create_time_ranges_with_normal_input(self):
         data = [0, 5, 10, 15, 35, 50, 55, 60, 65, 67, 68, 69, 73, 78, 83, 88, 90]
