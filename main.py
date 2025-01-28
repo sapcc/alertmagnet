@@ -18,7 +18,7 @@ from utilities.semaphore import ThreadManager
 
 
 @click.command()
-@click.option("-a", "--api-endpoint", default=None, help="api endpoint to query against [required]")
+@click.option("-a", "--api-endpoint", default=None, required=True, help="api endpoint to query against")
 @click.option(
     "-c",
     "--cert",
