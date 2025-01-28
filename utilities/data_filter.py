@@ -63,11 +63,12 @@ def create_time_ranges(
     value = data[-1]
     if start is None:
         out.append((value, 0))
+        return out
+
+    if not value == prev + step:  # consider using >
+        out.append((start, prev - start))
+        out.append((value, 0))
     else:
-        if not value == prev + step:  # consider using >
-            out.append((start, prev - start))
-            out.append((value, 0))
-        else:
-            out.append((start, value - start))
+        out.append((start, value - start))
 
     return out
