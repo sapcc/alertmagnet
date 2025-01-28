@@ -100,7 +100,7 @@ def main(
     paths = [None for i in range(max_index)]
     dc = DataCleaner()
 
-    for index in range(2):
+    for index in range(max_index):
         query_uuid = query_uuids[index]
 
         if not len(qm.queues[query_uuid].query_objects) == 0:
