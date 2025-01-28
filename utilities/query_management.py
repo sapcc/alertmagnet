@@ -11,7 +11,6 @@ from datetime import timezone as tz
 import requests
 
 from utilities import calc
-from utilities import directory_management
 from utilities import errors
 from utilities import data_filter
 from utilities import response_messages
@@ -38,14 +37,11 @@ class QueryExecutor:
 
     def __handle_query_result(self, result: dict):
         if result["status"] == "success":
-            if not self.path.endswith("/"):
-                self.path += "/"
-
             for index, value in enumerate(result["data"]["result"]):
                 value["values"] = data_filter.remove_state_from_timestamp_value(value["values"])
                 result["data"]["result"][index] = value
 
-            filename = rf"{self.path}data{self.chunk}.json"
+            filename = os.path.join(self.path, f"data{self.chunk}.json")
 
             with open(file=filename, mode="w", encoding="utf-8") as f:
                 f.write(json.dumps(result, indent=4))
@@ -256,7 +252,7 @@ class QueryManager:
         self.thread_manager = thread_manager
 
         self.queues: dict[str, QueryQueue] = {}
-        self.storage_path = r"data/" if storage_path is None else storage_path
+        self.storage_path = "data" if storage_path is None else storage_path
 
     def add_query_queue(self) -> int:
         query_queue_uuid = uuid.uuid4().hex
@@ -297,12 +293,9 @@ class QueryObject(object):
 
     def create_query_object_environment(self, path: str):
         if not os.path.exists(path=path):
-            directory_management.create_storage_path(path=path)
+            os.makedirs(name=path)
 
-        if not path.endswith("/"):
-            path += "/"
-
-        self.path = rf"{path}group{self.object_nr}"
+        self.path = os.path.join(path, f"group{self.object_nr}")
         os.mkdir(self.path)
 
     def execute_query(self):
@@ -322,14 +315,11 @@ class QueryQueue(object):
 
     def create_query_queue_environemt(self, path: str):
         if not os.path.exists(path=path):
-            directory_management.create_storage_path(path=path)
+            os.makedirs(name=path)
 
         queue_uuid = uuid.uuid4().hex
 
-        if not path.endswith("/"):
-            path += "/"
-
-        self.path = rf"{path}{queue_uuid}"
+        self.path = os.path.join(path, queue_uuid)
 
         os.mkdir(self.path)
 
