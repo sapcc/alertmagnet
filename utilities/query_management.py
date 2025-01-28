@@ -399,7 +399,7 @@ class QuerySplitter(object):
                 elif start > split:
                     queries.extend([query, None])
                 else:
-                    print("Unexpected split")
+                    print(f"Unexpected split: start {start}, split {split}, end {end}")
 
         return queries
 
