@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
+
 # standard imports
 import os
 import sys
+
 from datetime import datetime as dt
 
 # third party imports
 import click
 
 # first party imports
-from utilities.query_management import QueryManager
-from utilities.query_management import Query
-from utilities.query_management import QuerySplitter
+from utilities import DataCleaner
+from utilities import QueryManager
+from utilities import Query
+from utilities import QuerySplitter
 from utilities.semaphore import ThreadManager
 
 
@@ -57,29 +60,62 @@ def main(
     if api_endpoint is None:
         print("Please parse a value to the flag --api-endpoint.")
         sys.exit(os.EX_USAGE)
+
     if kwargs is None:
         kwargs = {}
+
     tm = ThreadManager(12)
     qm = QueryManager(cert=cert, timeout=timeout, storage_path=storage_path, threshold=threshold, thread_manager=tm)
+
     query = Query(base_url=api_endpoint)
+
     queries = QuerySplitter.split_by_treshold(QuerySplitter(), query=query, threshold=threshold)
+
     query_uuids = [qm.add_query_queue() for i in range(len(queries))]
+
     if not queries[0] is None:
         qm.create_query_objects(
             query_queue_uuid=query_uuids[0], query=queries[0], separator=86_400
         )  # 60 * 60 * 24 * 7 = 604_800 # 60 * 60 * 24 = 86_400
+
     if not queries[1] is None:
         qm.create_query_objects(
             query_queue_uuid=query_uuids[1], query=queries[1], separator=7_776_000
         )  # 60 * 60 * 24 * 90 = 7_776_000
+
     qm.create_environments()
+
     for query_uuid in query_uuids:
         if len(qm.queues[query_uuid].query_objects) == 0:
             continue
-        qm.queues[query_uuid].execute_queries()
-    # Use thread join logic to continue
-    # end = dt.now()
-    # print(f"Program execution needed {(end - start).total_seconds()}s.")
+        qm.queues[query_uuid].schedule_queries()
+
+    tm.execute_all_threads()
+    end = dt.now()
+    print(f"Downloading data lastet: {(end - start)} seconds.")
+
+    start = dt.now()
+
+    max_index = 2
+    paths = [None for i in range(max_index)]
+    dc = DataCleaner()
+
+    for index in range(2):
+        query_uuid = query_uuids[index]
+
+        if not len(qm.queues[query_uuid].query_objects) == 0:
+            queue = qm.queues[query_uuid]
+            paths[index] = queue.path
+
+        if not paths[index] is None:
+            if index == 1:
+                dc.clear_query_results(path=paths[0], step=3600)
+                continue
+
+            dc.clear_query_results(path=paths[0], step=60)
+
+    end = dt.now()
+    print(f"Cleaning data lastet: {(end - start)} seconds.")
 
 
 if __name__ == "__main__":
