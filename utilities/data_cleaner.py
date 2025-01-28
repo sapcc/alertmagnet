@@ -44,13 +44,12 @@ class DataCleaner(object):  # new file
 
             for result in sub_data["data"]["result"]:
                 index = self.__check_metric_in_data(result["metric"])
-                if not index is None:
-                    data = result["values"]
-                    self.data["data"]["result"][index]["values"].extend(data)
-                else:
-                    data = result["values"]
+                data = result["values"]
+                if index is None:
                     result["values"] = data
                     self.data["data"]["result"].append(result)
+                else:
+                    self.data["data"]["result"][index]["values"].extend(data)
 
         for result in self.data["data"]["result"]:
             result["values"] = list(set(result["values"]))
