@@ -74,14 +74,10 @@ def main(
     query_uuids = [qm.add_query_queue() for i in range(len(queries))]
 
     if not queries[0] is None:
-        qm.create_query_objects(
-            query_queue_uuid=query_uuids[0], query=queries[0], separator=60 * 60 * 24
-        )
+        qm.create_query_objects(query_queue_uuid=query_uuids[0], query=queries[0], separator=60 * 60 * 24)
 
     if not queries[1] is None:
-        qm.create_query_objects(
-            query_queue_uuid=query_uuids[1], query=queries[1], separator=7_776_000
-        )  # 60 * 60 * 24 * 90 = 7_776_000
+        qm.create_query_objects(query_queue_uuid=query_uuids[1], query=queries[1], separator=60 * 60 * 24 * 90)
 
     qm.create_environments()
 
