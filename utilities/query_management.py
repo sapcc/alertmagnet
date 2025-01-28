@@ -189,15 +189,17 @@ class Query(object):
             print(response.text)
             print("=" * 50)
             return response_messages.EMPTY_RESULTS
-        else:
-            try:
-                if data["status"] == "error" and data["errorType"] != "bad_data":
-                    return response_messages.EMPTY_RESULTS
+        except Exception as e:
+            print(f"Exception occured: {e.args}, {e.__traceback__.__str__}")
+            return response_messages.EMPTY_RESULTS
 
-            except KeyError:
+        try:
+            if data["status"] == "error" and data["errorType"] != "bad_data":
                 return response_messages.EMPTY_RESULTS
-            else:
-                return data
+        except KeyError:
+            return response_messages.EMPTY_RESULTS
+        else:
+            return data
 
     def __parse_request_data(self):
         start = self.global_start
