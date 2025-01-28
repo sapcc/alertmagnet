@@ -10,7 +10,7 @@ class ThreadManager(object):
         if semaphore_count is None:
             semaphore_count = os.cpu_count() - 2
 
-        self.semaphore = BoundedSemaphore(semaphore_count)  # Consider using BoundedSemaphore
+        self.semaphore = BoundedSemaphore(semaphore_count)
         self.threads: dict[str] = {}
 
     def add_thread(self, func) -> str:
