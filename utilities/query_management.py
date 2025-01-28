@@ -1,4 +1,3 @@
-# standard lib imports
 from __future__ import annotations
 import copy
 import json
@@ -9,10 +8,8 @@ from datetime import datetime as dt
 from datetime import timedelta as td
 from datetime import timezone as tz
 
-# third party imports
 import requests
 
-# first party imports
 from utilities import calc
 from utilities import directory_management
 from utilities import errors
