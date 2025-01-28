@@ -57,10 +57,6 @@ def main(
     threshold: int = None,
 ):
     start = dt.now()
-    if api_endpoint is None:
-        print("Please parse a value to the flag --api-endpoint.")
-        sys.exit(os.EX_USAGE)
-
     if kwargs is None:
         kwargs = {}
 
