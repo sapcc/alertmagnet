@@ -75,8 +75,8 @@ def main(
 
     if not queries[0] is None:
         qm.create_query_objects(
-            query_queue_uuid=query_uuids[0], query=queries[0], separator=86_400
-        )  # 60 * 60 * 24 * 7 = 604_800 # 60 * 60 * 24 = 86_400
+            query_queue_uuid=query_uuids[0], query=queries[0], separator=60 * 60 * 24
+        )
 
     if not queries[1] is None:
         qm.create_query_objects(
