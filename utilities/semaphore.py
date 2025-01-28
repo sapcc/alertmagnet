@@ -32,7 +32,7 @@ class ThreadManager(object):
         thread = Thread(target=self.wrapper_thread, args=(func,))
         thread.start()
 
-        # self.threads.pop(thread_uuid)
+        # TODO pop the used thread uuids from the list
 
         return thread
 
