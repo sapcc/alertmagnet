@@ -360,46 +360,45 @@ class QuerySplitter(object):
 
         if not threshold:
             queries.extend([query, None])
-        else:
+            return queries
 
-            now = dt.now(tz.utc)
+        now = dt.now(tz.utc)
 
-            base_url = query.base_url
-            start = query.global_start
-            end = query.global_end
-            kwargs = query.kwargs
+        base_url = query.base_url
+        start = query.global_start
+        end = query.global_end
+        kwargs = query.kwargs
 
-            if start is None:
-                start = calc.calculate_past_five_years_timestamp(now)
-                start = str(start)
+        if start is None:
+            start = calc.calculate_past_five_years_timestamp(now)
+            start = str(start)
 
-            end = str(now.timestamp()) if end is None else end
+        end = str(now.timestamp()) if end is None else end
 
-            split = str((now - td(days=threshold)).timestamp())
+        split = str((now - td(days=threshold)).timestamp())
 
-            if end > split > start:
-                queries.append(Query(base_url=base_url, start=split, end=end, kwargs=kwargs))
+        if end > split > start:
+            queries.append(Query(base_url=base_url, start=split, end=end, kwargs=kwargs))
 
-                params = {
-                    "step": "3600",
-                    "max_source_resolution": "1h",
-                }  # for 2nd query
+            params = {
+                "step": "3600",
+                "max_source_resolution": "1h",
+            }  # for 2nd query
 
-                kwargs = copy.deepcopy(kwargs)
-                if "params" in kwargs.keys():
-                    kwargs["params"].update(params)
-                else:
-                    kwargs["params"] = params
-
-                queries.append(Query(base_url=base_url, start=start, end=split, kwargs=kwargs))
-
+            kwargs = copy.deepcopy(kwargs)
+            if "params" in kwargs.keys():
+                kwargs["params"].update(params)
             else:
-                if split > end:
-                    queries.extend([None, query])
-                elif start > split:
-                    queries.extend([query, None])
-                else:
-                    print(f"Unexpected split: start {start}, split {split}, end {end}")
+                kwargs["params"] = params
+
+            queries.append(Query(base_url=base_url, start=start, end=split, kwargs=kwargs))
+        else:
+            if split > end:
+                queries.extend([None, query])
+            elif start > split:
+                queries.extend([query, None])
+            else:
+                print(f"Unexpected split: start {start}, split {split}, end {end}")
 
         return queries
 
