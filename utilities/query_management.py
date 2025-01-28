@@ -3,7 +3,6 @@ from __future__ import annotations
 import copy
 import json
 import os
-import time
 import uuid
 
 from datetime import datetime as dt
@@ -17,22 +16,77 @@ import requests
 from utilities import calc
 from utilities import directory_management
 from utilities import errors
+from utilities import data_filter
 from utilities import response_messages
 from utilities import semaphore
+from utilities.helper import ResponseDummy
 
 # TODO add META information to query -> QueryGroup
 
 
-class Query(object):  # Outsource Query logic with split; remove combine
+class QueryExecutor:
+    def __init__(self, path: str):
+        self.query = None
+        self.path = path
+        self.chunk = 0
+
+    def execute_query(self, query: Query):
+        self.query = query
+        result = query.execute()
+        self.__handle_query_result(result=result)
+
+    def reset(self):
+        self.query = None
+        self.chunk = 0
+
+    def __handle_query_result(self, result: dict):
+        if result["status"] == "success":
+            if not self.path.endswith("/"):
+                self.path += "/"
+
+            for index, value in enumerate(result["data"]["result"]):
+                value["values"] = data_filter.remove_state_from_timestamp_value(value["values"])
+                result["data"]["result"][index] = value
+
+            filename = rf"{self.path}data{self.chunk}.json"
+
+            with open(file=filename, mode="w", encoding="utf-8") as f:
+                f.write(json.dumps(result, indent=4))
+        elif result == response_messages.MESSAGE_EXCEEDED_MAXIMUM:
+            query1, query2 = self.__split_request_by_half(self.query)
+
+            self.execute_query(query=query1)
+            self.chunk += 1
+            self.execute_query(query=query2)
+            self.chunk += 1
+
+        return
+
+    def __split_request_by_half(self, query: Query) -> tuple[Query, Query]:
+        start_tt = float(query.global_start)
+        end_tt = float(query.global_end)
+
+        time_difference = end_tt - start_tt
+        half = time_difference / 2
+        mid = end_tt - half
+
+        query1 = copy.deepcopy(query)
+        query2 = copy.deepcopy(query)
+
+        query1.global_start = mid
+        query2.global_end = mid
+
+        return (query1, query2)
+
+
+class Query(object):
     def __init__(
         self,
         base_url: str = None,
         start: str = None,
         end: str = None,
         kwargs: dict = None,
-    ):
-        self.query_uuid = None
-        self.chunk = 0
+    ):  # TODO set standard format for start / end -> str | float
         self.path = None
 
         self.base_url = base_url
@@ -43,6 +97,8 @@ class Query(object):  # Outsource Query logic with split; remove combine
         self.kwargs = {} if kwargs is None else kwargs
 
         self.cert = None
+        self.params = None
+        self.target = None
         self.timeout = None
 
         self.initialize()
@@ -56,12 +112,101 @@ class Query(object):  # Outsource Query logic with split; remove combine
             self.global_start = calc.calculate_past_five_years_timestamp(now)
             self.global_start = str(self.global_start)
 
-    def execute(self, query_uuid: str):
-        self.query_uuid = query_uuid
+        # apply kwargs values
+        self.__parse_request_data()
 
-        self.request_alerts(start=self.global_start, end=self.global_end)
+    def execute(self):
+        response = self.__execute_request()
+        result = self.__parse_request_result(response=response)
 
-    def get_alert_request_data(self, start: str = None, end: str = None):
+        return result
+
+    def set_request_parameters(self, cert: str = None, timeout: int = None):
+        self.cert = cert
+        self.timeout = timeout
+
+    # TODO set property
+    def set_start(self, start: str):
+        self.global_start = start
+
+        if self.params is None:
+            return
+
+        self.params["start"] = start
+
+    # TODO set property
+    def set_end(self, end: str):
+        self.global_end = end
+
+        if self.params is None:
+            return
+
+        self.params["end"] = end
+
+    def __execute_request(self) -> requests.Response:
+        base_url = self.base_url
+        cert = self.cert
+        params = self.params
+        target = self.target
+        timeout = self.timeout
+
+        url = base_url + target
+
+        for _ in range(3):
+            try:
+                print(f"starting request… [{dt.fromtimestamp(float(params['start']))}]")  # TODO remove print statements
+                res = requests.get(url=url, cert=cert, params=params, timeout=timeout)
+                print(f"request finished [{dt.fromtimestamp(float(params['start']))}]")
+            except requests.ConnectTimeout:
+                print("requests.ConnectTimeout")
+                continue
+            except requests.exceptions.ReadTimeout:
+                print("requests.exceptions.ReadTimeout")
+                return ResponseDummy(response_messages.MESSAGE_EXCEEDED_MAXIMUM)
+            except requests.exceptions.SSLError:
+                print("requests.exceptions.SSLError")
+                continue
+            except requests.exceptions.ConnectionError:
+                print("requests.exceptions.ConnectionError")
+                continue
+            except requests.exceptions.ChunkedEncodingError:
+                print("requests.exceptions.ChunkedEncodingError")
+                return ResponseDummy(response_messages.MESSAGE_EXCEEDED_MAXIMUM)
+            except Exception as e:
+                raise e
+            else:
+                return res
+
+        print("safety catch invoked")
+        return ResponseDummy(response_messages.EMPTY_RESULTS)
+
+    def __parse_request_result(self, response: requests.Response):
+        if response is None:
+            return response_messages.EMPTY_RESULTS
+
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            # LOGGING
+            print("=" * 50)
+            print(response.text)
+            print("=" * 50)
+            return response_messages.EMPTY_RESULTS
+        else:
+            try:
+                if data["status"] == "error":
+                    if not data["errorType"] == "bad_data":
+                        return response_messages.EMPTY_RESULTS
+
+            except KeyError:
+                return response_messages.EMPTY_RESULTS
+            else:
+                return data
+
+    def __parse_request_data(self):
+        start = self.global_start
+        end = self.global_end
+
         valid_query_parameters = (
             "query",
             "dedup",
@@ -94,128 +239,8 @@ class Query(object):  # Outsource Query logic with split; remove combine
                 if parameter_key in valid_query_parameters:
                     params[parameter_key] = self.kwargs["params"][parameter_key]
 
-        out = {"target": target, "params": params}
-
-        return out
-
-    def create_requests(self, target: str, params: list[tuple]) -> dict:
-        url = self.base_url + target
-
-        for i in range(3):
-            try:
-                print(f"starting request… [{dt.fromtimestamp(float(params['start']))}]")  # TODO remove print statements
-                res = requests.get(url=url, cert=self.cert, params=params, timeout=self.timeout)
-                print(f"request finished [{dt.fromtimestamp(float(params['start']))}]")
-            except requests.ConnectTimeout:
-                print("requests.ConnectTimeout")
-                continue
-            except requests.exceptions.ReadTimeout:
-                print("requests.exceptions.ReadTimeout")
-                return response_messages.MESSAGE_EXCEEDED_MAXIMUM
-            except requests.exceptions.SSLError:
-                print("requests.exceptions.SSLError")
-                continue
-            except requests.exceptions.ConnectionError:
-                print("requests.exceptions.ConnectionError")
-                continue
-            except requests.exceptions.ChunkedEncodingError:
-                print("requests.exceptions.ChunkedEncodingError")
-                return response_messages.MESSAGE_EXCEEDED_MAXIMUM
-            except Exception as e:
-                raise e
-            else:
-                try:
-                    data = res.json()
-                except requests.exceptions.JSONDecodeError:
-                    print("=" * 50)
-                    print(res.text)
-                    print("=" * 50)
-                else:
-                    return data
-        else:
-            print("safety catch invoked")
-            return {}
-
-    # TODO maybe extend back
-    def combine_queries(self, start: str = None, mid: str = None, end: str = None) -> dict:
-        request_data1 = self.get_alert_request_data(start=start, end=mid)
-        request_data2 = self.get_alert_request_data(start=mid, end=end)
-
-        result1 = self.create_requests(**request_data1)
-        result2 = self.create_requests(**request_data2)
-
-        if result1 == response_messages.MESSAGE_EXCEEDED_MAXIMUM:
-            self.__split_request_by_half(start=start, end=mid)
-        elif "status" in result1:
-            if result1["status"] == "success":
-                filename = self.path + rf"/data{self.chunk}.json"
-
-                with open(filename, "w", encoding="utf-8") as f:
-                    f.write(json.dumps(result1, indent=4))
-
-                self.chunk += 1
-        else:
-            self.chunk += 1
-
-        del result1
-
-        if result2 == response_messages.MESSAGE_EXCEEDED_MAXIMUM:
-            self.__split_request_by_half(start=mid, end=end)
-        elif "status" in result2:
-            if result2["status"] == "success":
-                filename = self.path + rf"/data{self.chunk}.json"
-
-                with open(filename, "w", encoding="utf-8") as f:
-                    f.write(json.dumps(result2, indent=4))
-
-                self.chunk += 1
-        else:
-            self.chunk += 1
-
-        del result2
-
-        return
-
-    def __split_request_by_half(self, start: str = None, end: str = None) -> dict:
-        start_tt = float(start)
-        end_tt = float(end)
-
-        time_difference = end_tt - start_tt
-        half = time_difference / 2
-        mid = end_tt - half
-
-        self.combine_queries(start=start, mid=mid, end=end)
-
-        return
-
-    def start_request(self, cert: str = None, timeout: int = 30, path: str = None):
-        self.path = r"data/" if path is None else path
-
-        self.cert = cert
-        self.timeout = timeout
-
-        self.request_alerts(start=self.global_start, end=self.global_end)
-
-    def request_alerts(self, start: str, end: str):
-        request_data = self.get_alert_request_data(start=start, end=end)
-        results = self.create_requests(**request_data)
-
-        if results == response_messages.MESSAGE_EXCEEDED_MAXIMUM:
-            print("splitting necessary")
-            self.__split_request_by_half(start=start, end=end)
-        else:
-            if not self.path.endswith("/"):
-                self.path += "/"
-
-            filename = rf"{self.path}data{self.chunk}.json"
-
-            with open(file=filename, mode="w", encoding="utf-8") as f:
-                f.write(json.dumps(results, indent=4))
-
-        return
-
-
-# TODO develop own tool
+        self.params = params
+        self.target = target
 
 
 class QueryManager:
@@ -284,9 +309,11 @@ class QueryObject(object):
 
     def execute_query(self):
         cert = self.query_queue.query_manager.cert
-        timeout = self.query_queue.query_manager.timeout
         path = self.path
-        self.query.start_request(cert=cert, timeout=timeout, path=path)
+        timeout = self.query_queue.query_manager.timeout
+        self.query.set_request_parameters(cert=cert, timeout=timeout)
+        qe = QueryExecutor(path=path)
+        qe.execute_query(self.query)
 
 
 class QueryQueue(object):
@@ -314,22 +341,25 @@ class QueryQueue(object):
     def add_query_object(self, query_object: QueryObject):
         self.query_objects.append(query_object)
 
-    def execute_queries(self):
+    def schedule_queries(self) -> list[str]:
+        out = []
+
         for query_object in self.query_objects:
             thread_uuid = self.query_manager.thread_manager.add_thread(query_object.execute_query)
-            self.query_manager.thread_manager.start_thread(thread_uuid=thread_uuid)
-            time.sleep(1)
+            out.append(thread_uuid)
+
+        return out
 
 
 class QuerySplitter(object):
     def __init__(self):
         pass
 
-    def split_by_treshold(self, query: Query, threshold: int = None) -> list[Query, Query]:
+    def split_by_treshold(self, query: Query, threshold: int = None) -> list[Query | None, Query | None]:
         queries = []
 
         if not threshold:
-            queries.append(Query)
+            queries.extend([query, None])
         else:
 
             now = dt.now(tz.utc)
@@ -400,7 +430,7 @@ class QuerySplitter(object):
 
     def __create_query_copy(self, query: Query, start: dt, end: dt) -> Query:
         query_copy = copy.deepcopy(query)
-        query_copy.global_start = start.timestamp()
-        query_copy.global_end = end.timestamp()
+        query_copy.set_start(start=start.timestamp())
+        query_copy.set_end(end=end.timestamp())
 
         return query_copy
