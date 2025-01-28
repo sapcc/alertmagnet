@@ -20,7 +20,7 @@ def remove_state_from_timestamp_value(
 
         if not isinstance(value[0], float):
             raise TypeError(
-                f"Invalid input format: isinstance(value[0], int) = {isinstance(value[0], float)}; type: {type(value[0])}"
+                f"Invalid input format: isinstance(value[0], float) = {isinstance(value[0], float)}; type: {type(value[0])}"
             )
 
         out.append(value[0])
