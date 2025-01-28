@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 
@@ -5,7 +6,10 @@ from threading import Thread, BoundedSemaphore
 
 
 class ThreadManager(object):
-    def __init__(self, semaphore_count: int):
+    def __init__(self, semaphore_count: int | None = None):
+        if semaphore_count is None:
+            semaphore_count = os.cpu_count() - 2
+
         self.semaphore = BoundedSemaphore(semaphore_count)  # Consider using BoundedSemaphore
         self.threads: dict[str] = {}
 
