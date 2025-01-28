@@ -14,10 +14,16 @@ class DataCleaner(object):  # new file
         if not path.endswith("/"):
             path += "/"
 
-        files = []
         groups = os.listdir(path)
 
         print("Scanning files")
+        files = [
+            (path + group + "/" + file)
+            for file in os.listdir(path + group)
+            for group in groups
+            if group.startswith("group")
+        ]
+
         for group in groups:
             if not group.startswith("group"):
                 continue
