@@ -194,9 +194,8 @@ class Query(object):
             return response_messages.EMPTY_RESULTS
         else:
             try:
-                if data["status"] == "error":
-                    if not data["errorType"] == "bad_data":
-                        return response_messages.EMPTY_RESULTS
+                if data["status"] == "error" and data["errorType"] != "bad_data":
+                    return response_messages.EMPTY_RESULTS
 
             except KeyError:
                 return response_messages.EMPTY_RESULTS
