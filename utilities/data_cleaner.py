@@ -52,8 +52,7 @@ class DataCleaner(object):  # new file
                     self.data["data"]["result"][index]["values"].extend(data)
 
         for result in self.data["data"]["result"]:
-            result["values"] = list(set(result["values"]))
-            result["values"].sort()
+            result["values"] = sorted(set(result["values"]))
 
         for result in self.data["data"]["result"]:
             result["values"] = create_time_ranges(data=result["values"], step=step)
