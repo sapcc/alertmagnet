@@ -21,13 +21,6 @@ class DataCleaner(object):  # new file
             for file in os.listdir(os.path.join(path, group))
         ]
 
-        """for group in groups:
-            if not group.startswith("group"):
-                continue
-
-            for file in os.listdir(os.path.join(path, group)):
-                files.append(os.path.join(path, group, file))"""
-
         with open(file=files[0], mode="r", encoding="utf-8") as f:
             self.data = json.load(f)
 
@@ -41,14 +34,6 @@ class DataCleaner(object):  # new file
                 continue
 
             self.__assert_index_to_metrics(results=sub_data["data"]["result"])
-            """for result in sub_data["data"]["result"]:
-                index = self.__check_metric_in_data(result["metric"])
-                data = result["values"]
-                if index is None:
-                    result["values"] = data
-                    self.data["data"]["result"].append(result)
-                else:
-                    self.data["data"]["result"][index]["values"].extend(data)"""
 
         for result in self.data["data"]["result"]:
             result["values"] = sorted(set(result["values"]))
