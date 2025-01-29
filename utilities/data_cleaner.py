@@ -87,7 +87,3 @@ class DataCleaner(object):  # new file
                 self.data["data"]["result"][value[1]]["values"].extend(results[i]["values"])
 
         return None
-
-
-dc = DataCleaner()
-dc.clear_query_results(path="/mnt/sdb1/data/85105cb8dfcb4bcb8cc042eeb62006a5", step=60)
