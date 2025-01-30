@@ -101,10 +101,10 @@ def main(
 
         if not paths[index] is None:
             if index == 1:
-                dc.clear_query_results(path=paths[0], step=3600)
+                dc.clear_query_results(path=paths[index], step=3600)
                 continue
 
-            dc.clear_query_results(path=paths[0], step=60)
+            dc.clear_query_results(path=paths[index], step=60)
 
     end = dt.now()
     print(f"Cleaning data lastet: {(end - start)} seconds.")
