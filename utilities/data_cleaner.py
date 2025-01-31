@@ -6,8 +6,12 @@ import os
 from utilities.data_filter import create_time_ranges
 
 
-class DataCleaner(object):  # new file
+class DataCleaner(object):
     def __init__(self):
+        self.data = None
+        self.metric_index_map = {}
+
+    def __reset(self):
         self.data = None
         self.metric_index_map = {}
 
@@ -33,7 +37,7 @@ class DataCleaner(object):  # new file
             self.metric_index_map[flatted_key] = index
 
         for file in files[1:]:
-            print(f"file {files.index(file)+1} from {len(files)}")
+            print(f"file {files.index(file)+1} from {len(files)}", end="\r")
             with open(file=file, mode="r", encoding="utf-8") as f:
                 sub_data = json.load(f)
 
@@ -52,10 +56,7 @@ class DataCleaner(object):  # new file
         with open(file=os.path.join(path, "finalData.json"), mode="w", encoding="utf-8") as f:
             f.write(json.dumps(self.data, indent=4))
 
-    """def __check_metric_in_data(self, metric) -> int | None:
-        for index, result in enumerate(self.data["data"]["result"]):
-            if result["metric"] == metric:
-                return index"""
+        self.__reset()
 
     def __assert_index_to_metrics(self, results) -> int | None:
         for result in results:
