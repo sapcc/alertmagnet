@@ -70,6 +70,16 @@ class TestFilter(unittest.TestCase):
 
         self.assertEqual(result, expected_result)
 
+    def test_create_time_ranges_with_continous_double_input(self):
+        data = [0, 5, 10, 15, 20, 20, 25]
+        step = 5
+
+        expected_result = [(0, 25)]
+
+        result = create_time_ranges(data=data, step=step)
+
+        self.assertEqual(result, expected_result)
+
     def test_create_time_ranges_with_one_input(self):
         data = [77]
         step = 5
