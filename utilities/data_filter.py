@@ -53,6 +53,9 @@ def create_time_ranges(
             start = prev = value
             continue
 
+        if value == prev:
+            continue
+
         if value != prev + step:  # consider using >
             out.append((start, prev - start))
             start = prev = value
