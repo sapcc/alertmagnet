@@ -1,4 +1,50 @@
+"""
+Module: query_management
+
+This module provides classes and methods for managing and executing queries, handling query results, and managing query queues. It includes functionality for splitting queries, executing them, and storing the results.
+
+Classes:
+    QueryExecutor:
+        Executes a given query and handles the result. Can split the query if the result exceeds a maximum threshold.
+
+    Query:
+        Represents a query with parameters such as base URL, start and end times, and additional keyword arguments. Provides methods to initialize, execute, and set request parameters.
+
+    QueryManager:
+        Manages multiple query queues, creates query objects, and sets up environments for query execution.
+
+    QueryObject:
+        Represents a single query object within a query queue. Responsible for creating its environment and executing the query.
+
+    QueryQueue:
+        Manages a queue of query objects. Creates the environment for the queue and schedules the execution of queries.
+
+    QuerySplitter:
+        Provides methods to split queries based on a threshold or a separator.
+
+Functions:
+    None
+
+Usage:
+    This module is intended to be used for managing and executing large sets of queries, particularly in environments where queries need to be split and executed in parallel. It handles the complexities of query execution, result handling, and error management.
+
+Dependencies:
+    - copy
+    - json
+    - os
+    - uuid
+    - datetime
+    - requests
+    - utilities.calc
+    - utilities.errors
+    - utilities.data_filter
+    - utilities.response_messages
+    - utilities.semaphore
+    - utilities.helper.ResponseDummy
+"""
+
 from __future__ import annotations
+
 import copy
 import json
 import os
@@ -21,17 +67,50 @@ from utilities.helper import ResponseDummy
 
 
 class QueryExecutor:
+    """
+    A class to manage and execute queries, handle their results, and split queries if necessary.
+
+    Attributes:
+        path (str): The file path where query results will be saved.
+        query (Query): The current query being executed.
+        chunk (int): The chunk number for splitting query results.
+
+    Methods:
+        __init__(path: str):
+            Initializes the QueryExecutor with a given file path.
+
+        execute_query(query: Query):
+            Executes a given query and handles the result.
+
+        reset():
+            Resets the query and chunk attributes to their initial state.
+    """
+
     def __init__(self, path: str):
         self.query = None
         self.path = path
         self.chunk = 0
 
     def execute_query(self, query: Query):
+        """
+        Executes the given query and handles the result.
+
+        Args:
+            query (Query): The query object to be executed.
+
+        Returns:
+            None
+        """
         self.query = query
         result = query.execute()
         self.__handle_query_result(result=result)
 
     def reset(self):
+        """
+        Resets the query and chunk attributes to their initial states.
+
+        This method sets the `query` attribute to None and the `chunk` attribute to 0.
+        """
         self.query = None
         self.chunk = 0
 
@@ -73,6 +152,33 @@ class QueryExecutor:
 
 
 class Query(object):
+    """
+    A class to manage and execute queries with specified parameters.
+
+    Attributes:
+        base_url (str): The base URL for the query.
+        global_start (str): The start time for the query.
+        global_end (str): The end time for the query.
+        kwargs (dict): Additional keyword arguments for the query.
+        path (str): The path for the query.
+        cert (str): The certificate for the query.
+        params (dict): The parameters for the query.
+        target (str): The target for the query.
+        timeout (int): The timeout for the query.
+
+    Methods:
+        initialize():
+            Initializes the query parameters.
+        execute():
+            Executes the query and returns the result.
+        set_request_parameters(cert: str = None, timeout: int = None):
+            Sets the request parameters for the query.
+        set_start(start: str):
+            Sets the start time for the query.
+        set_end(end: str):
+            Sets the end time for the query.
+    """
+
     def __init__(
         self,
         base_url: str = None,
@@ -97,6 +203,14 @@ class Query(object):
         self.initialize()
 
     def initialize(self):
+        """
+        Initializes the query management by setting the global start and end timestamps.
+
+        This method ensures that the `global_end` and `global_start` attributes have valid values.
+        If `global_end` is None, it sets it to the current timestamp.
+        If `global_start` is None, it calculates the timestamp for five years ago and sets it.
+        Finally, it applies additional request data through the `__parse_request_data` method.
+        """
         now = dt.now(tz.utc)
 
         self.global_end = str(now.timestamp()) if self.global_end is None else self.global_end  # ensures end has value
@@ -109,17 +223,43 @@ class Query(object):
         self.__parse_request_data()
 
     def execute(self):
+        """
+        Executes a request and parses the result.
+
+        This method sends a request using the __execute_request method,
+        then parses the response using the __parse_request_result method,
+        and returns the parsed result.
+
+        Returns:
+            The parsed result of the request.
+        """
         response = self.__execute_request()
         result = self.__parse_request_result(response=response)
 
         return result
 
     def set_request_parameters(self, cert: str = None, timeout: int = None):
+        """
+        Sets the request parameters for the query management.
+
+        Args:
+            cert (str, optional): The certificate to be used for the request. Defaults to None.
+            timeout (int, optional): The timeout duration for the request in seconds. Defaults to None.
+        """
         self.cert = cert
         self.timeout = timeout
 
     # TODO set property
     def set_start(self, start: str):
+        """
+        Sets the start parameter for the query.
+
+        Args:
+            start (str): The start time or date to be set.
+
+        Returns:
+            None
+        """
         self.global_start = start
 
         if self.params is None:
@@ -129,6 +269,15 @@ class Query(object):
 
     # TODO set property
     def set_end(self, end: str):
+        """
+        Sets the end parameter for the query.
+
+        Args:
+            end (str): The end time or date to set for the query.
+
+        Returns:
+            None
+        """
         self.global_end = end
 
         if self.params is None:
@@ -238,6 +387,28 @@ class Query(object):
 
 
 class QueryManager:
+    """
+    Manages query queues and their associated operations.
+
+    Attributes:
+        cert (str): Certificate for authentication.
+        timeout (int): Timeout duration for queries.
+        storage_path (str): Path to store query data.
+        threshold (int): Threshold value for query processing.
+        thread_manager (semaphore.ThreadManager): Manager for handling threads.
+        queues (dict[str, QueryQueue]): Dictionary of query queues managed by this instance.
+
+    Methods:
+        add_query_queue() -> int:
+            Adds a new query queue and returns its UUID.
+
+        create_query_objects(query_queue_uuid: str, query: Query, separator: int):
+            Splits a query into multiple query objects and adds them to the specified query queue.
+
+        create_environments():
+            Creates environments for all query queues with query objects.
+    """
+
     def __init__(
         self,
         cert: str = None,
@@ -255,6 +426,15 @@ class QueryManager:
         self.storage_path = "data" if storage_path is None else storage_path
 
     def add_query_queue(self) -> int:
+        """
+        Adds a new query queue to the query manager.
+
+        This method generates a new UUID for the query queue, creates a new
+        QueryQueue instance, and adds it to the manager's queue dictionary.
+
+        Returns:
+            int: The UUID of the newly created query queue.
+        """
         query_queue_uuid = uuid.uuid4().hex
         query_queue = QueryQueue(query_manager=self)
         self.queues[query_queue_uuid] = query_queue
@@ -262,6 +442,18 @@ class QueryManager:
         return query_queue_uuid
 
     def create_query_objects(self, query_queue_uuid: str, query: Query, separator: int):
+        """
+        Creates query objects from a given query and adds them to the specified query queue.
+
+        Args:
+            query_queue_uuid (str): The UUID of the query queue to which the query objects will be added.
+            query (Query): The query to be split into query objects.
+            separator (int): The separator used to split the query into multiple query objects.
+
+        Raises:
+            errors.InvalidQueryQueueError: If the provided query queue UUID does not exist in the QueryManager.
+
+        """
         query_objects = QuerySplitter.split_by_separator(QuerySplitter(), query=query, separator=separator)
         query_queue = self.queues.get(query_queue_uuid, None)
 
@@ -275,6 +467,16 @@ class QueryManager:
             query_queue.add_query_object(query_object=query_object)
 
     def create_environments(self):
+        """
+        Creates environments for each queue in the queues dictionary.
+
+        This method iterates over the values in the `queues` dictionary. For each queue,
+        if the queue has query objects, it calls the `create_query_queue_environment`
+        method on the queue, passing the `storage_path` as an argument.
+
+        Returns:
+            None
+        """
         for queue in self.queues.values():
             if len(queue.query_objects) == 0:
                 continue
@@ -285,6 +487,23 @@ class QueryManager:
 
 
 class QueryObject(object):
+    """
+    A class to manage and execute queries within a specified environment.
+
+    Attributes:
+        query_queue (QueryQueue): The queue that holds the query.
+        query (Query): The query to be executed.
+        object_nr (int): The identifier number for the query object.
+        path (str): The file path where the query object environment is created.
+
+    Methods:
+        create_query_object_environment(path: str):
+            Creates a directory for the query object environment at the specified path.
+
+        execute_query():
+            Executes the query using the parameters from the query queue's manager.
+    """
+
     def __init__(self, query_queue: QueryQueue, query: Query, nr: int):
         self.query_queue = query_queue
         self.query = query
@@ -292,6 +511,17 @@ class QueryObject(object):
         self.path = None
 
     def create_query_object_environment(self, path: str):
+        """
+        Creates a query object environment by ensuring the specified path exists and
+        creating a subdirectory for the query object.
+
+        Args:
+            path (str): The base directory path where the query object environment
+                        should be created.
+
+        Raises:
+            OSError: If the directory creation fails.
+        """
         if not os.path.exists(path=path):
             os.makedirs(name=path)
 
@@ -299,6 +529,21 @@ class QueryObject(object):
         os.mkdir(self.path)
 
     def execute_query(self):
+        """
+        Executes the query with the specified parameters.
+
+        This method retrieves the certificate and timeout from the query manager,
+        sets the request parameters for the query, and then executes the query
+        using a QueryExecutor instance.
+
+        Attributes:
+            cert (str): The certificate used for the query.
+            path (str): The path where the query will be executed.
+            timeout (int): The timeout value for the query.
+
+        Raises:
+            Exception: If the query execution fails.
+        """
         cert = self.query_queue.query_manager.cert
         path = self.path
         timeout = self.query_queue.query_manager.timeout
@@ -308,12 +553,44 @@ class QueryObject(object):
 
 
 class QueryQueue(object):
+    """
+    A class to manage a queue of query objects and their execution.
+
+    Attributes:
+        query_manager (QueryManager): An instance of QueryManager to manage query execution.
+        query_objects (list[QueryObject]): A list to store query objects.
+        path (str): The path where the query queue environment is created.
+
+    Methods:
+        create_query_queue_environemt(path: str):
+            Creates a directory environment for the query queue at the specified path.
+
+        add_query_object(query_object: QueryObject):
+            Adds a query object to the queue.
+
+        schedule_queries() -> list[str]:
+            Schedules the execution of all query objects in the queue and returns a list of thread UUIDs.
+    """
+
     def __init__(self, query_manager: QueryManager):
         self.query_manager = query_manager
         self.query_objects: list[QueryObject] = []
         self.path = None
 
     def create_query_queue_environemt(self, path: str):
+        """
+        Creates a query queue environment at the specified path.
+
+        This method performs the following steps:
+        1. Checks if the specified path exists. If not, it creates the directory.
+        2. Generates a unique identifier (UUID) for the query queue.
+        3. Constructs the full path for the query queue using the base path and the UUID.
+        4. Creates the directory for the query queue.
+        5. Iterates over the query objects and calls their `create_query_object_environment` method to set up their environments.
+
+        Args:
+            path (str): The base directory path where the query queue environment will be created.
+        """
         if not os.path.exists(path=path):
             os.makedirs(name=path)
 
@@ -327,9 +604,21 @@ class QueryQueue(object):
             query_object.create_query_object_environment(self.path)
 
     def add_query_object(self, query_object: QueryObject):
+        """
+        Adds a QueryObject to the list of query objects.
+
+        Args:
+            query_object (QueryObject): The query object to be added to the list.
+        """
         self.query_objects.append(query_object)
 
     def schedule_queries(self) -> list[str]:
+        """
+        Schedules the execution of queries by creating a new thread for each query object.
+
+        Returns:
+            list[str]: A list of thread UUIDs corresponding to the scheduled queries.
+        """
         out = []
 
         for query_object in self.query_objects:
@@ -340,10 +629,34 @@ class QueryQueue(object):
 
 
 class QuerySplitter(object):
+    """
+    A utility class for splitting queries based on specified thresholds or separators.
+
+    Methods
+    -------
+    split_by_treshold(query: Query, threshold: int = None) -> list[Query | None, Query | None]:
+        Splits a query into two parts based on a given threshold in days. If no threshold is provided, returns the original query and None.
+
+    split_by_separator(query: Query, separator: int):
+        Splits a query into multiple parts based on a given time separator in seconds.
+    """
+
     def __init__(self):
         pass
 
     def split_by_treshold(self, query: Query, threshold: int = None) -> list[Query | None, Query | None]:
+        """
+        Splits a given query into two separate queries based on a specified threshold.
+
+        Args:
+            query (Query): The original query to be split.
+            threshold (int, optional): The threshold in days to split the query. If not provided, the query will not be split.
+
+        Returns:
+            list[Query | None, Query | None]: A list containing two queries. The first query covers the period from the threshold to the end date,
+                                              and the second query covers the period from the start date to the threshold. If the threshold is not
+                                              provided or the split is not possible, one of the queries will be None.
+        """
         queries = []
 
         if not threshold:
@@ -391,6 +704,17 @@ class QuerySplitter(object):
         return queries
 
     def split_by_separator(self, query: Query, separator: int):
+        """
+        Splits a given query into multiple sub-queries based on a specified time separator.
+
+        Args:
+            query (Query): The query object to be split.
+            separator (int): The time interval in seconds to split the query by.
+
+        Returns:
+            dict: A dictionary where the keys are integers representing the sub-query index,
+                  and the values are the sub-query objects.
+        """
         query_objects = {}
 
         start = dt.fromtimestamp(float(query.global_start))

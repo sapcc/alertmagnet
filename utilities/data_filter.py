@@ -1,10 +1,16 @@
-def remove_state_from_timestamp_value(
-    data: list[list],
-) -> list[int]:  # expected list structure e.g. result matrix from prometheus
-    """Expected input structure:
-    [[timestamp, state], …]
-    >>> produced output:
-    [timestamp, …]
+def remove_state_from_timestamp_value(data: list[list]) -> list[int]:
+    """
+    Extracts the first element (assumed to be a timestamp) from each sublist in the input list.
+
+    Args:
+        data (list[list]): A list of lists, where each sublist contains at least one element,
+                           and the first element is expected to be a float representing a timestamp.
+
+    Returns:
+        list[int]: A list of the first elements (timestamps) from each sublist in the input list.
+
+    Raises:
+        TypeError: If the input data is not a list of lists, or if the first element of any sublist is not a float.
     """
 
     out = []
@@ -28,13 +34,28 @@ def remove_state_from_timestamp_value(
     return out
 
 
-def create_time_ranges(
-    data: list[float], step: int
-) -> list[tuple]:  # expected list structure e.g. result matrix from prometheus
-    """Expected input structure data:
-    [timestamp, …]
-    >>> produced output:
-    [(timestamp, duration), …]
+def create_time_ranges(data: list[float], step: int) -> list[tuple]:
+    """
+    Create time ranges from a list of float values.
+
+    This function takes a list of float values and a step value, and returns a list of tuples.
+    Each tuple represents a time range, where the first element is the start value and the second
+    element is the duration (difference between the start and end values).
+
+    Args:
+        data (list[float]): A list of float values representing time points.
+        step (int): The step value to determine the continuity of the time ranges.
+
+    Returns:
+        list[tuple]: A list of tuples, where each tuple contains the start value and the duration
+                     of a time range.
+
+    Raises:
+        TypeError: If the input data is not a list.
+
+    Example:
+        >>> create_time_ranges([1.0, 2.0, 3.0, 5.0, 6.0], 1)
+        [(1.0, 2.0), (5.0, 1.0)]
     """
 
     if not isinstance(data, list):
