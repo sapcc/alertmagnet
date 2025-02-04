@@ -36,7 +36,7 @@ from utilities.semaphore import ThreadManager
     default=None,
     help="parameters for the query; supported keys: target, params\ntarget > specifies a target behind the api endpoint\nparams > sets specific parameters for the query; supported parameters are: 'query', 'dedup', 'partial_response', 'step', 'max_source_resolution', 'engine', 'analyze'",
 )
-@click.option("-p", "--storage-path", default=None, help="Storage path the store the query results")
+@click.option("-p", "--directory-path", default=None, help="directory path in which the query results are stored")
 @click.option(
     "-b",
     "--threshold",
