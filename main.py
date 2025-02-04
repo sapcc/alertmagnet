@@ -41,7 +41,7 @@ from utilities.semaphore import ThreadManager
     "-b",
     "--threshold",
     default=None,
-    help="Threshold to split queries due to efficiency and resource optimization",
+    help="Threshold which specifies when the data are interpolated by Thanos\nThis helps splitting the queries due to efficiency and resource optimization",
     type=int,
 )
 # option for max long term storage
