@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
 # standard imports
-import os
-import sys
-
 from datetime import datetime as dt
 
 # third party imports
