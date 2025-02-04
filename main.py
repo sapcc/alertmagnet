@@ -34,7 +34,7 @@ from utilities.semaphore import ThreadManager
     "-k",
     "--kwargs",
     default=None,
-    help="parameters for the query; supported keys: target, params\ntarget > specifies a target behind the api endpoint\nparams > sets specific parameters for the query; supported parameters are: 'query', 'dedup', 'partial_response', 'step', 'max_source_resolution', 'engine', 'analyze'",
+    help="parameters for the query; supported keys: target, params\ntarget > specifies a target behind the api endpoint\nparams > sets specific parameters for the query\n\tsupported parameters are:\n\t - 'query'\n\t - 'dedup'\n\t - 'partial_response'\n\t - 'step'\n\t - 'max_source_resolution'\n\t - 'engine'\n\t - 'analyze'",
 )
 @click.option("-p", "--directory-path", default=None, help="directory path in which the query results are stored")
 @click.option(
