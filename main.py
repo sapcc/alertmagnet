@@ -26,7 +26,7 @@ from utilities.semaphore import ThreadManager
     "-t",
     "--timeout",
     default=30,
-    help="timeout after which the request aborts automatically",
+    help="number of seconds the client will wait for the server to send a response",
     show_default=True,
     type=int,
 )
