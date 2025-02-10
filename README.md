@@ -25,8 +25,7 @@ python3 -m venv .venv/
 4. Install dependencies
 
 ```bash
-pip install setuptools
-python setup.py install
+pip install -r requirements.txt
 ```
 
 5. Run the program
