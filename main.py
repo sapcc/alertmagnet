@@ -63,12 +63,12 @@ from utilities.semaphore import ThreadManager
 def main(
     api_endpoint: str = None,
     cert: str = None,
-    timeout: int = 30,
+    timeout: int = None,
     kwargs: dict = None,
     directory_path: str = None,
     threshold: int = None,
-    delay: int = 0.25,
-    threads: int = 12,
+    delay: float = None,
+    threads: int = None,
 ):
     start = dt.now()
     if kwargs is None:
