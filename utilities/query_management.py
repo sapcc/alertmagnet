@@ -35,7 +35,7 @@ Dependencies:
     - uuid
     - datetime
     - requests
-    - utilities.calc
+    - utilities.Calc
     - utilities.errors
     - utilities.data_filter
     - utilities.response_messages
@@ -56,7 +56,7 @@ from datetime import timezone as tz
 
 import requests
 
-from utilities import calc
+from utilities import Calc
 from utilities import errors
 from utilities import data_filter
 from utilities import response_messages
@@ -216,7 +216,7 @@ class Query(object):
         self.global_end = str(now.timestamp()) if self.global_end is None else self.global_end  # ensures end has value
 
         if self.global_start is None:  # ensures start has value
-            self.global_start = calc.calculate_past_five_years_timestamp(now)
+            self.global_start = Calc.calculate_max_past(Calc(), now, "5y")
             self.global_start = str(self.global_start)
 
         # apply kwargs values
@@ -671,7 +671,7 @@ class QuerySplitter(object):
         kwargs = query.kwargs
 
         if start is None:
-            start = calc.calculate_past_five_years_timestamp(now)
+            start = Calc.calculate_max_past(Calc(), now, "5y")
             start = str(start)
 
         end = str(now.timestamp()) if end is None else end
