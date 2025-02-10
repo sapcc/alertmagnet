@@ -49,7 +49,7 @@ from utilities.semaphore import ThreadManager
     "--delay",
     default=0.25,
     help="Delay in seconds between each query execution",
-    type=int,
+    type=float,
 )
 @click.option(
     "-x",
