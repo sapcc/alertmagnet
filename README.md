@@ -31,7 +31,7 @@ pip install -r requirements.txt
 5. Run the program
 
 ```bash
-python main.py -a "https://this/target/url/shoudl/end/with/something/like/api/v1/" -c "path_to_your_certificates_if_you_neew/certificate.pem" -p "/directory/to/store/your/query_results" -b 90 -t 150
+python main.py -a "https://this/target/url/shoudl/end/with/something/like/api/v1/" -c "./relative_path_to_your_certificates_if_you_neew/certificate.pem" -p "/directory/to/store/your/query_results" -b 90 -t 150
 ```
 
 Parameter explanation:
