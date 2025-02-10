@@ -44,6 +44,21 @@ from utilities.semaphore import ThreadManager
     help="Threshold in days which specifies when the data are interpolated by Thanos\nThis helps splitting the queries due to efficiency and resource optimization",
     type=int,
 )
+@click.option(
+    "-d",
+    "--delay",
+    default=0.25,
+    help="Delay in seconds between each query execution",
+    type=int,
+)
+@click.option(
+    "-x",
+    "--threads",
+    default=12,
+    help="Maximum number of threads to use for query execution",
+    show_default=True,
+    type=int,
+)
 # TODO: add possible option for max long term storage, currently fixed at 5y
 def main(
     api_endpoint: str = None,
@@ -52,12 +67,14 @@ def main(
     kwargs: dict = None,
     directory_path: str = None,
     threshold: int = None,
+    delay: int = 0.25,
+    threads: int = 12,
 ):
     start = dt.now()
     if kwargs is None:
         kwargs = {}
 
-    tm = ThreadManager(12)
+    tm = ThreadManager(semaphore_count=threads, delay=delay)
     qm = QueryManager(cert=cert, timeout=timeout, directory_path=directory_path, threshold=threshold, thread_manager=tm)
 
     query = Query(base_url=api_endpoint)

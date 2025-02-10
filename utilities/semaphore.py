@@ -1,4 +1,3 @@
-import os
 import time
 import uuid
 
@@ -6,11 +5,12 @@ from threading import Thread, BoundedSemaphore
 
 
 class ThreadManager(object):
-    def __init__(self, semaphore_count: int | None = None):
+    def __init__(self, semaphore_count: int | None = None, delay: float = 0.25):
         if semaphore_count is None:
-            semaphore_count = os.cpu_count() - 2
+            semaphore_count = 8
 
         self.semaphore = BoundedSemaphore(semaphore_count)
+        self.delay = delay
         self.threads: dict[str] = {}
 
     def add_thread(self, func) -> str:
@@ -41,7 +41,7 @@ class ThreadManager(object):
         for key in self.threads:
             thread = self.start_thread(thread_uuid=key)
             threads.append(thread)
-            time.sleep(1)
+            time.sleep(self.delay)
 
         for thread in threads:
             thread.join()
