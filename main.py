@@ -50,7 +50,7 @@ def main(
     cert: str = None,
     timeout: int = 30,
     kwargs: dict = None,
-    storage_path: str = None,
+    directory_path: str = None,
     threshold: int = None,
 ):
     start = dt.now()
@@ -58,7 +58,7 @@ def main(
         kwargs = {}
 
     tm = ThreadManager(12)
-    qm = QueryManager(cert=cert, timeout=timeout, storage_path=storage_path, threshold=threshold, thread_manager=tm)
+    qm = QueryManager(cert=cert, timeout=timeout, storage_path=directory_path, threshold=threshold, thread_manager=tm)
 
     query = Query(base_url=api_endpoint)
 
