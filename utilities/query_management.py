@@ -299,20 +299,20 @@ class Query(object):
                 print(f"starting request… [{dt.fromtimestamp(float(params['start']))}]")  # TODO remove print statements
                 res = requests.get(url=url, cert=cert, params=params, timeout=timeout)
                 print(f"request finished [{dt.fromtimestamp(float(params['start']))}]")
-            except requests.ConnectTimeout:
-                print("requests.ConnectTimeout")
+            except requests.ConnectTimeout as e:
+                print("requests.ConnectTimeout:", e)
                 continue
-            except requests.exceptions.ReadTimeout:
-                print("requests.exceptions.ReadTimeout")
+            except requests.exceptions.ReadTimeout as e:
+                print("requests.exceptions.ReadTimeout:", e)
                 return ResponseDummy(response_messages.MESSAGE_EXCEEDED_MAXIMUM)
-            except requests.exceptions.SSLError:
-                print("requests.exceptions.SSLError")
+            except requests.exceptions.SSLError as e:
+                print("requests.exceptions.SSLError:", e)
                 continue
-            except requests.exceptions.ConnectionError:
-                print("requests.exceptions.ConnectionError")
+            except requests.exceptions.ConnectionError as e:
+                print("requests.exceptions.ConnectionError:", e)
                 continue
-            except requests.exceptions.ChunkedEncodingError:
-                print("requests.exceptions.ChunkedEncodingError")
+            except requests.exceptions.ChunkedEncodingError as e:
+                print("requests.exceptions.ChunkedEncodingError:", e)
                 return ResponseDummy(response_messages.MESSAGE_EXCEEDED_MAXIMUM)
             except Exception as e:
                 raise e
