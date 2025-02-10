@@ -678,7 +678,11 @@ class QuerySplitter(object):
 
         split = str((now - td(days=threshold)).timestamp())
 
-        if end > split > start:
+        flt_start = float(start)
+        flt_split = float(split)
+        flt_end = float(end)
+
+        if flt_end > flt_split > flt_start:
             queries.append(Query(base_url=base_url, start=split, end=end, kwargs=kwargs))
 
             params = {
