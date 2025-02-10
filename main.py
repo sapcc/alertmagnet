@@ -58,7 +58,7 @@ def main(
         kwargs = {}
 
     tm = ThreadManager(12)
-    qm = QueryManager(cert=cert, timeout=timeout, storage_path=directory_path, threshold=threshold, thread_manager=tm)
+    qm = QueryManager(cert=cert, timeout=timeout, directory_path=directory_path, threshold=threshold, thread_manager=tm)
 
     query = Query(base_url=api_endpoint)
 

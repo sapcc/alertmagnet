@@ -393,7 +393,7 @@ class QueryManager:
     Attributes:
         cert (str): Certificate for authentication.
         timeout (int): Timeout duration for queries.
-        storage_path (str): Path to store query data.
+        directory_path (str): Path to store query data.
         threshold (int): Threshold value for query processing.
         thread_manager (semaphore.ThreadManager): Manager for handling threads.
         queues (dict[str, QueryQueue]): Dictionary of query queues managed by this instance.
@@ -413,7 +413,7 @@ class QueryManager:
         self,
         cert: str = None,
         timeout: int = None,
-        storage_path: str = None,
+        directory_path: str = None,
         threshold: int = None,
         thread_manager: semaphore.ThreadManager = None,
     ):
@@ -423,7 +423,7 @@ class QueryManager:
         self.thread_manager = thread_manager
 
         self.queues: dict[str, QueryQueue] = {}
-        self.storage_path = "data" if storage_path is None else storage_path
+        self.directory_path = "data" if directory_path is None else directory_path
 
     def add_query_queue(self) -> int:
         """
@@ -472,7 +472,7 @@ class QueryManager:
 
         This method iterates over the values in the `queues` dictionary. For each queue,
         if the queue has query objects, it calls the `create_query_queue_environment`
-        method on the queue, passing the `storage_path` as an argument.
+        method on the queue, passing the `directory_path` as an argument.
 
         Returns:
             None
@@ -480,7 +480,7 @@ class QueryManager:
         for queue in self.queues.values():
             if len(queue.query_objects) == 0:
                 continue
-            queue.create_query_queue_environemt(self.storage_path)
+            queue.create_query_queue_environemt(self.directory_path)
 
 
 # TODO add visual feedback
