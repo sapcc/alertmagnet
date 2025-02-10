@@ -44,7 +44,7 @@ from utilities.semaphore import ThreadManager
     help="Threshold which specifies when the data are interpolated by Thanos\nThis helps splitting the queries due to efficiency and resource optimization",
     type=int,
 )
-# option for max long term storage
+# TODO: add possible option for max long term storage, currently fixed at 5y
 def main(
     api_endpoint: str = None,
     cert: str = None,
