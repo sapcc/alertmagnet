@@ -5,10 +5,7 @@ from threading import Thread, BoundedSemaphore
 
 
 class ThreadManager(object):
-    def __init__(self, semaphore_count: int | None = None, delay: float = 0.25):
-        if semaphore_count is None:
-            semaphore_count = 8
-
+    def __init__(self, semaphore_count: int, delay: float):
         self.semaphore = BoundedSemaphore(semaphore_count)
         self.delay = delay
         self.threads: dict[str] = {}
