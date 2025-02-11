@@ -1,7 +1,10 @@
+import logging
 import re
 
 from datetime import datetime as dt
 from datetime import timedelta as td
+
+logger = logging.getLogger("alertmagnet")
 
 
 class Calc:
@@ -12,6 +15,7 @@ class Calc:
         self.max_long_term = max_long_term
 
     def calculate_max_past(self, end: dt, past_range: str) -> float:
+        logger.debug("Calculating max past for %s and %s", end, past_range)
         delta = self.__parse_past_range(past_range)
         past = end - delta
 
@@ -21,6 +25,7 @@ class Calc:
         match = re.match(r"(?:(\d+)y)?(?:(\d+)m)?(?:(\d+)w)?(?:(\d+)d)?", past_range)
 
         if not match:
+            logger.error("Invalid past_range format: %s", past_range)
             raise ValueError(f"Invalid past_range format: {past_range}")
 
         years = int(match.group(1) or 0)
@@ -29,5 +34,6 @@ class Calc:
         days = int(match.group(4) or 0)
 
         total_days = years * 365 + months * 28 + weeks * 7 + days
+        logger.debug("Total days: %d", total_days)
 
         return td(days=total_days)

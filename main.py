@@ -135,7 +135,7 @@ def main(
 
     tm.execute_all_threads()
     end = dt.now()
-    print(f"Downloading data lastet: {(end - start)} seconds.")
+    logger.info("Downloading data lastet: %s seconds.", (end - start))
 
     start = dt.now()
 
@@ -158,9 +158,9 @@ def main(
             dc.clear_query_results(path=paths[index], step=60)
 
     end = dt.now()
-    print(f"Cleaning data lastet: {(end - start)} seconds.")
+    logger.info("Cleaning data lastet: %s seconds.", (end - start))
 
 
 if __name__ == "__main__":
+    setup_logging()
     main()
-    print("finished…")
