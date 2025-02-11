@@ -58,11 +58,10 @@ class DataCleaner(object):
 
         for root, dirs, files in os.walk(path, topdown=False):
             for name in files:
-                os.remove(os.path.join(root, name))
+                if not name == "finalData.json":
+                    os.remove(os.path.join(root, name))
             for name in dirs:
                 os.rmdir(os.path.join(root, name))
-
-        os.rmdir(path=path)
 
         self.__reset()
 
