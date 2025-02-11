@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 
 # standard imports
+import atexit
+import json
+import logging
+import logging.config
+import logging.handlers
+import pathlib
+
 from datetime import datetime as dt
 
 # third party imports
@@ -13,6 +20,24 @@ from utilities import Query
 from utilities import QuerySplitter
 from utilities.semaphore import ThreadManager
 from utilities.query_management import calc
+
+logger = logging.getLogger("alertmagnet")
+
+
+def setup_logging():
+    file = pathlib.Path("config/logging.conf")
+    with open(file=file, mode="r", encoding="utf-8") as f:
+        config = f.read()
+
+    logging.config.dictConfig(json.loads(config))
+
+    queue_handler = logging.getHandlerByName("queue_handler")
+
+    if queue_handler is not None:
+        queue_handler.listener.start()
+        atexit.register(queue_handler.listener.stop)
+
+    logging.basicConfig(level="INFO")
 
 
 @click.command()
