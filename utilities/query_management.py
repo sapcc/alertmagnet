@@ -65,6 +65,8 @@ from utilities.helper import ResponseDummy
 
 # TODO add META information to query -> QueryGroup
 
+calc = Calc()
+
 
 class QueryExecutor:
     """
@@ -216,7 +218,7 @@ class Query(object):
         self.global_end = str(now.timestamp()) if self.global_end is None else self.global_end  # ensures end has value
 
         if self.global_start is None:  # ensures start has value
-            self.global_start = Calc.calculate_max_past(Calc(), now, "5y")
+            self.global_start = calc.calculate_max_past(now, calc.max_long_term)
             self.global_start = str(self.global_start)
 
         # apply kwargs values
@@ -671,7 +673,7 @@ class QuerySplitter(object):
         kwargs = query.kwargs
 
         if start is None:
-            start = Calc.calculate_max_past(Calc(), now, "5y")
+            start = calc.calculate_max_past(now, calc.max_long_term)
             start = str(start)
 
         end = str(now.timestamp()) if end is None else end

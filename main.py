@@ -12,6 +12,7 @@ from utilities import QueryManager
 from utilities import Query
 from utilities import QuerySplitter
 from utilities.semaphore import ThreadManager
+from utilities.query_management import calc
 
 
 @click.command()
@@ -59,6 +60,14 @@ from utilities.semaphore import ThreadManager
     show_default=True,
     type=int,
 )
+@click.option(
+    "-y",
+    "--max-long-term-storage",
+    default="1y",
+    help="Maximum long term storage following the format <a>y, <b>m, <c>w, <d>d",
+    show_default=True,
+    type=str,
+)
 # TODO: add possible option for max long term storage, currently fixed at 5y
 def main(
     api_endpoint: str = None,
@@ -69,6 +78,7 @@ def main(
     threshold: int = None,
     delay: float = None,
     threads: int = None,
+    max_long_term_storage: str = None,
 ):
     start = dt.now()
     if kwargs is None:
@@ -76,6 +86,8 @@ def main(
 
     tm = ThreadManager(semaphore_count=threads, delay=delay)
     qm = QueryManager(cert=cert, timeout=timeout, directory_path=directory_path, threshold=threshold, thread_manager=tm)
+
+    calc.set_max_long_term(max_long_term_storage)
 
     query = Query(base_url=api_endpoint)
 

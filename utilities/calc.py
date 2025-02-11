@@ -6,7 +6,10 @@ from datetime import timedelta as td
 
 class Calc:
     def __init__(self):
-        pass
+        self.max_long_term = "1y"
+
+    def set_max_long_term(self, max_long_term: str):
+        self.max_long_term = max_long_term
 
     def calculate_max_past(self, end: dt, past_range: str = "1y") -> float:
         delta = self.__parse_past_range(past_range)
