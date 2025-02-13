@@ -91,6 +91,7 @@ def main(
             continue
         qm.queues[query_uuid].schedule_queries()
 
+    logger.info("Starting to download data.")
     tm.execute_all_threads()
     end = dt.now()
     logger.info("Downloading data lastet: %s seconds.", (end - start))
