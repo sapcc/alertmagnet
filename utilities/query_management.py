@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import copy
 import json
+import logging
 import os
 import uuid
 
@@ -62,6 +63,8 @@ from utilities import data_filter
 from utilities import response_messages
 from utilities import semaphore
 from utilities.helper import ResponseDummy
+
+logger = logging.getLogger("alertmagnet")
 
 # TODO add META information to query -> QueryGroup
 
@@ -298,30 +301,29 @@ class Query(object):
 
         for _ in range(3):
             try:
-                print(f"starting request… [{dt.fromtimestamp(float(params['start']))}]")  # TODO remove print statements
                 res = requests.get(url=url, cert=cert, params=params, timeout=timeout)
-                print(f"request finished [{dt.fromtimestamp(float(params['start']))}]")
             except requests.ConnectTimeout as e:
-                print("requests.ConnectTimeout:", e)
+                logger.warning("requests.ConnectTimeout: %s", e)
                 continue
             except requests.exceptions.ReadTimeout as e:
-                print("requests.exceptions.ReadTimeout:", e)
+                logger.warning("requests.exceptions.ReadTimeout: %s", e)
                 return ResponseDummy(response_messages.MESSAGE_EXCEEDED_MAXIMUM)
             except requests.exceptions.SSLError as e:
-                print("requests.exceptions.SSLError:", e)
+                logger.warning("requests.exceptions.SSLError: %s", e)
                 continue
             except requests.exceptions.ConnectionError as e:
-                print("requests.exceptions.ConnectionError:", e)
+                logger.warning("requests.exceptions.ConnectionError: %s", e)
                 continue
             except requests.exceptions.ChunkedEncodingError as e:
-                print("requests.exceptions.ChunkedEncodingError:", e)
+                logger.warning("requests.exceptions.ChunkedEncodingError: %s", e)
                 return ResponseDummy(response_messages.MESSAGE_EXCEEDED_MAXIMUM)
             except Exception as e:
+                logger.error("Exception occured: %s", e)
                 raise e
             else:
                 return res
 
-        print("safety catch invoked")
+        logger.debug("safety catch invoked")
         return ResponseDummy(response_messages.EMPTY_RESULTS)
 
     def __parse_request_result(self, response: requests.Response):
@@ -331,13 +333,10 @@ class Query(object):
         try:
             data = response.json()
         except requests.exceptions.JSONDecodeError:
-            # LOGGING
-            print("=" * 50)
-            print(response.text)
-            print("=" * 50)
+            logging.error("JSONDecodeError: %s", response.text)
             return response_messages.EMPTY_RESULTS
         except Exception as e:
-            print(f"Exception occured: {e.args}, {e.__traceback__.__str__}")
+            logger.warning("Exception occured: %s, %s", e.args, e.__traceback__.__str__)
             return response_messages.EMPTY_RESULTS
 
         try:
@@ -705,7 +704,7 @@ class QuerySplitter(object):
             elif start > split:
                 queries.extend([query, None])
             else:
-                print(f"Unexpected split: start {start}, split {split}, end {end}")
+                logger.debug("Unexpected split: start %s, split %s, end %s", start, split, end)
 
         return queries
 
