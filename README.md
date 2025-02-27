@@ -67,7 +67,7 @@ Parameter explanation:
 | delay                 | float    | Delay in seconds between each query execution                                                                                                                | 0.25                                         |
 | threads               | int      | Maximum number of threads to use for query execution                                                                                                         | 12                                           |
 | max_long_term_storage | str      | Maximum long term storage following the format <a>y, <b>m, <c>w, <d>d                                                                                        | 1y                                           |
-| toggle_logging        | bool     | Toggle which defines whether logs are written into a file.                                                                                                   | False                                        |
+| log_to_file           | bool     | Toggle which defines whether logs are written into a file.                                                                                                   | False                                        |
 | log_level             | str      | Log Level -> valid values are \| CRITICAL \| ERROR \| WARNING \| INFO \| DEBUG \|                                                                            | INFO                                         |
 
 > [!NOTE]

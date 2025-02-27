@@ -63,10 +63,10 @@ def __parse_config(conf: dict):
         if conf["max_long_term_storage"] == "":
             conf["max_long_term_storage"] = "1y"
 
-        if conf["toggle_logging"].lower() == "true":
-            conf["toggle_logging"] = True
+        if conf["log_to_file"].lower() == "true":
+            conf["log_to_file"] = True
         else:
-            conf["toggle_logging"] = False
+            conf["log_to_file"] = False
 
         match conf["log_level"]:
             case "DEBUG":

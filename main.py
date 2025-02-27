@@ -28,7 +28,7 @@ def setup_logging():
     with open(file=file, mode="r", encoding="utf-8") as f:
         config = json.load(f)
 
-    if CONFIG["toggle_logging"]:
+    if CONFIG["log_to_file"]:
         if not os.path.exists("logs"):
             os.makedirs("logs")
     else:
