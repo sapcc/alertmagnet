@@ -22,7 +22,7 @@ from utilities.query_management import calc
 
 logger = logging.getLogger("alertmagnet")
 
-CONFIG = load_config("config/config.cfg")
+CONFIG = load_config("config/settings.conf")
 
 
 def setup_logging():
