@@ -1,9 +1,12 @@
 """Module documentation"""
 
 import json
+import logging
 import os
 
 from utilities.data_filter import create_time_ranges
+
+logger = logging.getLogger("alertmagnet")
 
 
 class DataCleaner(object):
@@ -16,9 +19,10 @@ class DataCleaner(object):
         self.metric_index_map = {}
 
     def clear_query_results(self, path: str, step: int):
+        logger.debug("clear_query_results called with path: %s and step: %s", path, step)
         groups = os.listdir(path)
 
-        print("Scanning files")
+        logger.info("Scanning files")
         files = [
             os.path.join(path, group, file)
             for group in groups
@@ -26,7 +30,7 @@ class DataCleaner(object):
             for file in os.listdir(os.path.join(path, group))
         ]
 
-        print("Staging files")
+        logger.info("Staging %s files", len(files))
         with open(file=files[0], mode="r", encoding="utf-8") as f:
             data = json.load(f)
             self.data = data["data"]["result"]
@@ -37,7 +41,6 @@ class DataCleaner(object):
             self.metric_index_map[flatted_key] = index
 
         for file in files[1:]:
-            print(f"file {files.index(file)+1} from {len(files)}", end="\r")
             with open(file=file, mode="r", encoding="utf-8") as f:
                 sub_data = json.load(f)
 
@@ -52,7 +55,7 @@ class DataCleaner(object):
         for result in self.data:
             result["values"] = create_time_ranges(data=result["values"], step=step)
 
-        print("Writing files")
+        logger.info("Writing files")
         with open(file=os.path.join(path, "finalData.json"), mode="w", encoding="utf-8") as f:
             f.write(json.dumps(self.data, indent=4))
 

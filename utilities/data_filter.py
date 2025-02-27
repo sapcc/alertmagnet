@@ -1,3 +1,8 @@
+import logging
+
+logger = logging.getLogger("alertmagnet")
+
+
 def remove_state_from_timestamp_value(data: list[list]) -> list[int]:
     """
     Extracts the first element (assumed to be a timestamp) from each sublist in the input list.
@@ -12,7 +17,7 @@ def remove_state_from_timestamp_value(data: list[list]) -> list[int]:
     Raises:
         TypeError: If the input data is not a list of lists, or if the first element of any sublist is not a float.
     """
-
+    logger.debug("remove_state_from_timestamp_value called with data: %s", data)
     out = []
 
     if not isinstance(data, list):
@@ -57,6 +62,7 @@ def create_time_ranges(data: list[float], step: int) -> list[tuple]:
         >>> create_time_ranges([1.0, 2.0, 3.0, 5.0, 6.0], 1)
         [(1.0, 2.0), (5.0, 1.0)]
     """
+    logger.debug("create_time_ranges called with data: %s and step: %s", data, step)
 
     if not isinstance(data, list):
         raise TypeError(f"Invalid input format: isinstance(data, list) = {isinstance(data, list)}; type: {type(data)}")
