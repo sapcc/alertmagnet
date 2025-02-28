@@ -4,7 +4,7 @@ import json
 import logging
 import os
 
-from utilities.data_filter import create_time_ranges
+from filtering.data_filter import create_time_ranges
 
 logger = logging.getLogger("alertmagnet")
 

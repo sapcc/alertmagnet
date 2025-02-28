@@ -57,16 +57,14 @@ from datetime import timezone as tz
 
 import requests
 
+from filtering import data_filter
 from utilities import Calc
 from utilities import errors
-from utilities import data_filter
 from utilities import response_messages
 from utilities import semaphore
 from utilities.helper import ResponseDummy
 
 logger = logging.getLogger("alertmagnet")
-
-# TODO add META information to query -> QueryGroup
 
 calc = Calc()
 
