@@ -55,7 +55,7 @@ def setup_logging():
     logger.info("Logging setup completed.")
 
 
-def main(
+def do_analysis(
     api_endpoint: str = None,
     cert: str = None,
     timeout: int = None,
@@ -65,11 +65,8 @@ def main(
     delay: float = None,
     threads: int = None,
     max_long_term_storage: str = None,
-    **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     start = dt.now()
-    if kwargs is None:
-        kwargs = {}
 
     tm = ThreadManager(semaphore_count=threads, delay=delay)
     qm = QueryManager(cert=cert, timeout=timeout, directory_path=directory_path, threshold=threshold, thread_manager=tm)
@@ -114,14 +111,85 @@ def main(
             paths[index] = queue.path
 
         if not paths[index] is None:
-            if index == 1:
-                dc.clear_query_results(path=paths[index], step=3600)
-                continue
+            try:
+                step = queries[index].kwargs["params"]["step"]
+            except KeyError:
+                step = 60
 
-            dc.clear_query_results(path=paths[index], step=60)
+            dc.clear_query_results(path=paths[index], step=step)
 
     end = dt.now()
     logger.info("Cleaning data lastet: %s seconds.", (end - start))
+
+    logger.info("Starting to analyze data.")
+    start = dt.now()
+
+    for path in paths:
+        if path is None:
+            continue
+        analyzer.get_mean_duration_per_alertname(path=path)
+
+    end = dt.now()
+    logger.info("Analyzing data lastet: %s seconds.", (end - start))
+
+    for path in paths[0:1]:
+        filtered_data = analyzer.filter_data(path=path)
+        correlated_data = analyzer.correlate_data(path=path, result=filtered_data, gap=60)
+        analyzer.create_alert_corrrelation_list(
+            path=path, alerts=correlated_data["alert_index"], matrix=correlated_data["corrcoef_matrix"]
+        )
+
+    return paths
+
+
+def main(
+    api_endpoint: str = None,
+    cert: str = None,
+    timeout: int = None,
+    kwargs: dict = None,
+    directory_path: str = None,
+    threshold: int = None,
+    delay: float = None,
+    threads: int = None,
+    max_long_term_storage: str = None,
+    **kkwargs  # additional unused keyword arguments for logging purposes
+):
+    logger.debug("Starting main function with config: %s", CONFIG)
+
+    if kwargs is None:
+        kwargs = {}
+
+    e = Exporter(prometheus_port=8123, paths=[])
+    exporter_thread = Thread(target=e.start_server)
+    exporter_thread.start()
+
+    to_be_removed_directories = []
+
+    while True:
+        paths = do_analysis(
+            api_endpoint=api_endpoint,
+            cert=cert,
+            timeout=timeout,
+            kwargs=kwargs,
+            directory_path=directory_path,
+            threshold=threshold,
+            delay=delay,
+            threads=threads,
+            max_long_term_storage=max_long_term_storage,
+        )
+
+        e.paths = paths[0:1]
+
+        time.sleep(60 * 60 * 24)  # run for a week
+
+        to_be_removed_directories.extend(paths)
+
+        if len(to_be_removed_directories) > 2:
+            for path in to_be_removed_directories[:-2]:
+                if os.path.exists(path):
+                    os.remove(path)
+
+                to_be_removed_directories.remove(path)
 
 
 if __name__ == "__main__":
