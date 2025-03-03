@@ -21,29 +21,41 @@ from querying import QueryManager
 from querying import Query
 from querying import QuerySplitter
 from querying.query_management import calc
-from utilities.config import load_config
+from utilities import config
 from utilities.semaphore import ThreadManager
 
 logger = logging.getLogger("alertmagnet")
 
-CONFIG = load_config("config/settings.conf")
+CONFIG: dict[str, str] = {}
+
+
+def load_config():
+    env = os.getenv("ALERTMAGNET_CONFIG_FILE", "-1")
+    if env != "-1":
+        print("Using config file from environment variable.")
+        config_file = env
+    else:
+        print("Using default config file.")
+        config_file = "config/settings.conf"
+
+    CONFIG.update(config.load_config(config_file=config_file))
 
 
 def setup_logging():
     file = pathlib.Path("config/logging.conf")
     with open(file=file, mode="r", encoding="utf-8") as f:
-        config = json.load(f)
+        log_config = json.load(f)
 
     if CONFIG["log_to_file"]:
         if not os.path.exists("logs"):
             os.makedirs("logs")
     else:
-        config["handlers"].pop("jsonFile")
-        config["handlers"].pop("logFile")
-        config["handlers"]["queue_handler"]["handlers"].remove("jsonFile")
-        config["handlers"]["queue_handler"]["handlers"].remove("logFile")
+        log_config["handlers"].pop("jsonFile")
+        log_config["handlers"].pop("logFile")
+        log_config["handlers"]["queue_handler"]["handlers"].remove("jsonFile")
+        log_config["handlers"]["queue_handler"]["handlers"].remove("logFile")
 
-    logging.config.dictConfig(config=config)
+    logging.config.dictConfig(config=log_config)
     logging.getLogger().setLevel(CONFIG["log_level"])  # adjusting root logger instead of local one
 
     queue_handler = logging.getHandlerByName("queue_handler")
@@ -194,5 +206,6 @@ def main(
 
 
 if __name__ == "__main__":
+    load_config()
     setup_logging()
     main(**CONFIG)
