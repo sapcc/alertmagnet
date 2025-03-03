@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 
 # standard imports
+import atexit
+import json
+import logging
+import logging.config
+import logging.handlers
+import os
+import pathlib
+
 from datetime import datetime as dt
 
-# third party imports
-import click
-
 # first party imports
+from utilities.config import load_config
 from utilities import DataCleaner
 from utilities import QueryManager
 from utilities import Query
@@ -14,61 +20,37 @@ from utilities import QuerySplitter
 from utilities.semaphore import ThreadManager
 from utilities.query_management import calc
 
+logger = logging.getLogger("alertmagnet")
 
-@click.command()
-@click.option("-a", "--api-endpoint", default=None, required=True, help="api endpoint to query against")
-@click.option(
-    "-c",
-    "--cert",
-    default=None,
-    help="relative path to the certificate which is used to create the request",
-)
-@click.option(
-    "-t",
-    "--timeout",
-    default=30,
-    help="number of seconds the client will wait for the server to send a response",
-    show_default=True,
-    type=int,
-)
-@click.option(
-    "-k",
-    "--kwargs",
-    default=None,
-    help="parameters for the query; supported keys: target, params\ntarget > specifies a target behind the api endpoint\nparams > sets specific parameters for the query\n\tsupported parameters are:\n\t - 'query'\n\t - 'dedup'\n\t - 'partial_response'\n\t - 'step'\n\t - 'max_source_resolution'\n\t - 'engine'\n\t - 'analyze'",
-)
-@click.option("-p", "--directory-path", default=None, help="directory path in which the query results are stored")
-@click.option(
-    "-b",
-    "--threshold",
-    default=None,
-    help="Threshold in days which specifies when the data are interpolated by Thanos\nThis helps splitting the queries due to efficiency and resource optimization",
-    type=int,
-)
-@click.option(
-    "-d",
-    "--delay",
-    default=0.25,
-    help="Delay in seconds between each query execution",
-    type=float,
-)
-@click.option(
-    "-x",
-    "--threads",
-    default=12,
-    help="Maximum number of threads to use for query execution",
-    show_default=True,
-    type=int,
-)
-@click.option(
-    "-y",
-    "--max-long-term-storage",
-    default="1y",
-    help="Maximum long term storage following the format <a>y, <b>m, <c>w, <d>d",
-    show_default=True,
-    type=str,
-)
-# TODO: add possible option for max long term storage, currently fixed at 5y
+CONFIG = load_config("config/settings.conf")
+
+
+def setup_logging():
+    file = pathlib.Path("config/logging.conf")
+    with open(file=file, mode="r", encoding="utf-8") as f:
+        config = json.load(f)
+
+    if CONFIG["log_to_file"]:
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
+    else:
+        config["handlers"].pop("jsonFile")
+        config["handlers"].pop("logFile")
+        config["handlers"]["queue_handler"]["handlers"].remove("jsonFile")
+        config["handlers"]["queue_handler"]["handlers"].remove("logFile")
+
+    logging.config.dictConfig(config=config)
+    logging.getLogger().setLevel(CONFIG["log_level"])  # adjusting root logger instead of local one
+
+    queue_handler = logging.getHandlerByName("queue_handler")
+
+    if queue_handler is not None:
+        queue_handler.listener.start()
+        atexit.register(queue_handler.listener.stop)
+
+    logger.info("Logging setup completed.")
+
+
 def main(
     api_endpoint: str = None,
     cert: str = None,
@@ -79,6 +61,7 @@ def main(
     delay: float = None,
     threads: int = None,
     max_long_term_storage: str = None,
+    **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     start = dt.now()
     if kwargs is None:
@@ -108,9 +91,10 @@ def main(
             continue
         qm.queues[query_uuid].schedule_queries()
 
+    logger.info("Starting to download data.")
     tm.execute_all_threads()
     end = dt.now()
-    print(f"Downloading data lastet: {(end - start)} seconds.")
+    logger.info("Downloading data lastet: %s seconds.", (end - start))
 
     start = dt.now()
 
@@ -133,9 +117,9 @@ def main(
             dc.clear_query_results(path=paths[index], step=60)
 
     end = dt.now()
-    print(f"Cleaning data lastet: {(end - start)} seconds.")
+    logger.info("Cleaning data lastet: %s seconds.", (end - start))
 
 
 if __name__ == "__main__":
-    main()
-    print("finished…")
+    setup_logging()
+    main(**CONFIG)

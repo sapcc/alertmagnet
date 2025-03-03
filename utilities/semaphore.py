@@ -1,7 +1,10 @@
+import logging
 import time
 import uuid
 
 from threading import Thread, BoundedSemaphore
+
+logger = logging.getLogger("alertmagnet")
 
 
 class ThreadManager(object):
@@ -11,6 +14,7 @@ class ThreadManager(object):
         self.threads: dict[str] = {}
 
     def add_thread(self, func) -> str:
+        logger.debug("Adding thread: %s", func.__name__)
         thread_uuid = uuid.uuid4().hex
         self.threads[thread_uuid] = func
 
@@ -26,6 +30,7 @@ class ThreadManager(object):
 
         func = self.threads[thread_uuid]
 
+        logger.debug("Starting thread: %s", func.__name__)
         thread = Thread(target=self.wrapper_thread, args=(func,))
         thread.start()
 
@@ -34,6 +39,7 @@ class ThreadManager(object):
         return thread
 
     def execute_all_threads(self):
+        logger.debug("Executing all threads")
         threads: list[Thread] = []
         for key in self.threads:
             thread = self.start_thread(thread_uuid=key)
