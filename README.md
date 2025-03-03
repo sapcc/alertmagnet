@@ -38,24 +38,12 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Parameter explanation:
-
-- \- a, api endpoint to query against [required]
-- \- c, relative path to the certificate which is used to create the request
-- \- p, directory path in which the query results are stored
-- \- b, Threshold in days which specifies when the data are interpolated by Thanos This helps splitting the queries due to efficiency and resource optimization
-- \- t, number of seconds the client will wait for the server to send a response \[default: 30\]
-
-> [!TIP]
-> Run the following command to get an overview about all available command line parameters
->
-> ```bash
-> python main.py --help
-> ```
-
 ## Config File Information
 
-> The config file is located under `config/config.cfg`. There you have a section `[AlertMagnet]`. All config settings have to be done beneath this section. In the following table are the possbile config settings listed.
+> [!NOTE]
+> To change the location of your config file set an environment variable with the name `ALERTMAGNET_CONFIG_FILE`
+
+> The default config file is located under `config/settings.conf`. There you have a section `[AlertMagnet]`. All config settings have to be done beneath this section. In the following table are the possbile config settings listed.
 
 | setting               | datatype | description                                                                                                                                                  | default / [example value]                    |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |

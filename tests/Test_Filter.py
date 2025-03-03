@@ -1,8 +1,6 @@
 import unittest
 
-from utilities.data_filter import create_time_ranges, remove_state_from_timestamp_value
-
-# TODO consider outsorcing into corresponding
+from filtering.data_filter import create_time_ranges, remove_state_from_timestamp_value
 
 
 class TestFilter(unittest.TestCase):

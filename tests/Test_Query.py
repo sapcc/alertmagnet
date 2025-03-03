@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime as dt
 from datetime import timedelta as td
 
-from utilities import Query
+from querying import Query
 
 API_ENDPOINT = "https://metrics-internal.qa-de-1.cloud.sap/api/v1/"
 
