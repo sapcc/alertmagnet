@@ -10,6 +10,8 @@ logger = logging.getLogger("alertmagnet")
 
 logger = logging.getLogger("alertmagnet")
 
+logger = logging.getLogger("alertmagnet")
+
 
 class DataCleaner(object):
     def __init__(self):

@@ -28,36 +28,6 @@ logger = logging.getLogger("alertmagnet")
 
 CONFIG = load_config("config/settings.conf")
 
-logger = logging.getLogger("alertmagnet")
-
-CONFIG = load_config("config/settings.conf")
-
-
-def setup_logging():
-    file = pathlib.Path("config/logging.conf")
-    with open(file=file, mode="r", encoding="utf-8") as f:
-        config = json.load(f)
-
-    if CONFIG["log_to_file"]:
-        if not os.path.exists("logs"):
-            os.makedirs("logs")
-    else:
-        config["handlers"].pop("jsonFile")
-        config["handlers"].pop("logFile")
-        config["handlers"]["queue_handler"]["handlers"].remove("jsonFile")
-        config["handlers"]["queue_handler"]["handlers"].remove("logFile")
-
-    logging.config.dictConfig(config=config)
-    logging.getLogger().setLevel(CONFIG["log_level"])  # adjusting root logger instead of local one
-
-    queue_handler = logging.getHandlerByName("queue_handler")
-
-    if queue_handler is not None:
-        queue_handler.listener.start()
-        atexit.register(queue_handler.listener.stop)
-
-    logger.info("Logging setup completed.")
-
 
 def setup_logging():
     file = pathlib.Path("config/logging.conf")
