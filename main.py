@@ -75,13 +75,13 @@ def do_analysis(
     directory_path: str = None,
     threshold: int = None,
     delay: float = None,
-    threads: int = None,
+    cores: int = None,
     max_long_term_storage: str = None,
     **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     start = dt.now()
 
-    tm = ThreadManager(semaphore_count=threads, delay=delay)
+    tm = ThreadManager(semaphore_count=cores, delay=delay)
     qm = QueryManager(cert=cert, timeout=timeout, directory_path=directory_path, threshold=threshold, thread_manager=tm)
 
     calc.set_max_long_term(max_long_term_storage)
@@ -145,9 +145,18 @@ def do_analysis(
     end = dt.now()
     logger.info("Analyzing data lastet: %s seconds.", (end - start))
 
-    for path in paths[0:1]:
+    for index_path, path in enumerate(paths[0:1]):
         filtered_data = analyzer.filter_data(path=path)
-        correlated_data = analyzer.correlate_data(path=path, result=filtered_data, gap=60)
+        start_tt = queries[index_path].global_start
+        end_tt = queries[index_path].global_end
+        correlated_data = analyzer.correlate_data(
+            path=path,
+            result=filtered_data,
+            gap=60,
+            cores=cores,
+            start_tt=start_tt,
+            end_tt=end_tt,
+        )
         analyzer.create_alert_corrrelation_list(
             path=path, alerts=correlated_data["alert_index"], matrix=correlated_data["corrcoef_matrix"]
         )
@@ -163,7 +172,7 @@ def main(
     directory_path: str = None,
     threshold: int = None,
     delay: float = None,
-    threads: int = None,
+    cores: int = None,
     max_long_term_storage: str = None,
     prometheus_port: int = None,
     **kkwargs  # additional unused keyword arguments for logging purposes
@@ -188,7 +197,7 @@ def main(
             directory_path=directory_path,
             threshold=threshold,
             delay=delay,
-            threads=threads,
+            cores=cores,
             max_long_term_storage=max_long_term_storage,
         )
 

@@ -55,10 +55,10 @@ def __parse_config(conf: dict):
         else:
             conf["delay"] = float(conf["delay"])
 
-        if conf["threads"] == "":
-            conf["threads"] = 12
+        if conf["cores"] == "":
+            conf["cores"] = 12
         else:
-            conf["threads"] = int(conf["threads"])
+            conf["cores"] = int(conf["cores"])
 
         if conf["max_long_term_storage"] == "":
             conf["max_long_term_storage"] = "1y"

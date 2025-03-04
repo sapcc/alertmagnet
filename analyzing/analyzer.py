@@ -57,7 +57,7 @@ def filter_data(path: str) -> dict:
     return result
 
 
-def correlate_data(path: str, result: dict, gap: int) -> dict:
+def correlate_data(path: str, result: dict, gap: int, cores: int, start_tt: float, end_tt: float) -> dict:
     """
     Calculate or load the correlation coefficient matrix for the given data.
 
@@ -76,8 +76,8 @@ def correlate_data(path: str, result: dict, gap: int) -> dict:
     if not os.path.exists(os.path.join(path, "corrcoefficient_matrix.json")):
         logger.info("Starting correlation …")
         start = dt.now()
-        ca = CorrelationAnalyzer(cores=80, gap=gap)
-        ca.calc_corrcoefficient_matrix(data=result, start=1674781350.0, end=1739581350.0)
+        ca = CorrelationAnalyzer(cores=cores, gap=gap)
+        ca.calc_corrcoefficient_matrix(data=result, start=start_tt, end=end_tt)
         end = dt.now()
         logger.info("Time taken: %s", end - start)
 
@@ -126,7 +126,7 @@ def create_alert_corrrelation_list(path: str, alerts: list, matrix: dict) -> dic
     return alert_correlation
 
 
-def get_correlating_alerts(path: str, gap: int) -> list:
+def get_correlating_alerts(path: str, gap: int, cores: int, start_tt: float, end_tt: float) -> list:
     """
     Analyzes alert data from a given file path and returns a list of correlating alerts.
 
@@ -143,7 +143,9 @@ def get_correlating_alerts(path: str, gap: int) -> list:
         list: A list of correlating alerts.
     """
     filtered_data = filter_data(path=path)
-    correlated_data = correlate_data(path=path, result=filtered_data, gap=gap)
+    correlated_data = correlate_data(
+        path=path, result=filtered_data, gap=gap, cores=cores, start_tt=start_tt, end_tt=end_tt
+    )
     correlation_list = create_alert_corrrelation_list(
         path=path, alerts=correlated_data["alert_index"], matrix=correlated_data["corrcoef_matrix"]
     )
