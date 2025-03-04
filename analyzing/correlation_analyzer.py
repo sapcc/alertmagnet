@@ -6,23 +6,9 @@ It includes methods to calculate correlation coefficient matrices, collect alert
 
 Classes:
     CorrelationAnalyzer: A class to analyze correlations between alert samples.
-
-Functions:
-    calc_corrcoefficient_matrix(data: dict, start: float, end: float): Calculates the correlation coefficient matrix for the given data.
-    get_time_samples(start: float, end: float, alert_key: str, alert_value: list, __store: dict): Collects time samples for a specific alert.
-    collect_alert_samples(data: dict, start: float, end: float): Collects alert samples and processes them for correlation analysis.
-    __sort_data(data: list): Sorts the given data based on the first element of each sublist.
-    create_time_samples_per_time(data: list, start: float, end: float): Creates time samples for the given data within the specified time range.
-    __create_coefficient_matrix(): Creates the correlation coefficient matrix.
-    __calc_corrcoefficient_per_cluster(cluster_name: str): Calculates the correlation coefficient for a specific cluster.
-    __calc_matrix_results(): Calculates the final results for the correlation matrix.
-    get_data(path: str): Loads data from a specified file path.
-
 """
 
-import json
 import logging
-import os
 import time as t
 
 from threading import BoundedSemaphore, Thread
@@ -254,15 +240,3 @@ class CorrelationAnalyzer(object):
                 self.matrix[index1][index2] = value2[0] / value2[1]
 
         logger.info("Finished calculating matrix results")
-
-    """def get_data(self, path: str):
-        if not os.path.exists(path):
-            logger.error("FileNotFoundError: Path %s does not exist.", path)
-            raise FileNotFoundError(f"Path {path} does not exist.")
-
-        file = os.path.join(path, "filteredData.json")
-
-        with open(file=file, mode="r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        return data"""
