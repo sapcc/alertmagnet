@@ -202,6 +202,7 @@ def main(
         )
 
         e.paths = paths[0:1]
+        e.increase_alertmagnet_analyzing_count()
         e.update_metrics()
 
         time.sleep(60 * 60 * 24)
