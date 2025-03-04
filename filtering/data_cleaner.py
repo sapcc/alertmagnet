@@ -4,7 +4,7 @@ import json
 import logging
 import os
 
-from utilities.data_filter import create_time_ranges
+from filtering.data_filter import create_time_ranges
 
 logger = logging.getLogger("alertmagnet")
 
@@ -57,7 +57,7 @@ class DataCleaner(object):
 
         logger.info("Writing files")
         with open(file=os.path.join(path, "finalData.json"), mode="w", encoding="utf-8") as f:
-            f.write(json.dumps(self.data, indent=4))
+            f.write(json.dumps(self.data))
 
         for root, dirs, files in os.walk(path, topdown=False):
             for name in files:

@@ -8,38 +8,56 @@ import logging.config
 import logging.handlers
 import os
 import pathlib
+import time
 
 from datetime import datetime as dt
+from datetime import timedelta as td
+from datetime import timezone as tz
+from threading import Thread
 
 # first party imports
-from utilities.config import load_config
-from utilities import DataCleaner
-from utilities import QueryManager
-from utilities import Query
-from utilities import QuerySplitter
+from analyzing import analyzer
+from filtering import DataCleaner
+from presenting.metrics import Exporter
+from querying import QueryManager
+from querying import Query
+from querying import QuerySplitter
+from querying.query_management import calc
+from utilities import config
 from utilities.semaphore import ThreadManager
-from utilities.query_management import calc
 
 logger = logging.getLogger("alertmagnet")
 
-CONFIG = load_config("config/settings.conf")
+CONFIG: dict[str, str] = {}
+
+
+def load_config():
+    env = os.getenv("ALERTMAGNET_CONFIG_FILE", "-1")
+    if env != "-1":
+        print("Using config file from environment variable.")
+        config_file = env
+    else:
+        print("Using default config file.")
+        config_file = "config/settings.conf"
+
+    CONFIG.update(config.load_config(config_file=config_file))
 
 
 def setup_logging():
     file = pathlib.Path("config/logging.conf")
     with open(file=file, mode="r", encoding="utf-8") as f:
-        config = json.load(f)
+        log_config = json.load(f)
 
     if CONFIG["log_to_file"]:
         if not os.path.exists("logs"):
             os.makedirs("logs")
     else:
-        config["handlers"].pop("jsonFile")
-        config["handlers"].pop("logFile")
-        config["handlers"]["queue_handler"]["handlers"].remove("jsonFile")
-        config["handlers"]["queue_handler"]["handlers"].remove("logFile")
+        log_config["handlers"].pop("jsonFile")
+        log_config["handlers"].pop("logFile")
+        log_config["handlers"]["queue_handler"]["handlers"].remove("jsonFile")
+        log_config["handlers"]["queue_handler"]["handlers"].remove("logFile")
 
-    logging.config.dictConfig(config=config)
+    logging.config.dictConfig(config=log_config)
     logging.getLogger().setLevel(CONFIG["log_level"])  # adjusting root logger instead of local one
 
     queue_handler = logging.getHandlerByName("queue_handler")
@@ -51,7 +69,7 @@ def setup_logging():
     logger.info("Logging setup completed.")
 
 
-def main(
+def do_analysis(
     api_endpoint: str = None,
     cert: str = None,
     timeout: int = None,
@@ -59,15 +77,13 @@ def main(
     directory_path: str = None,
     threshold: int = None,
     delay: float = None,
-    threads: int = None,
+    cores: int = None,
     max_long_term_storage: str = None,
     **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     start = dt.now()
-    if kwargs is None:
-        kwargs = {}
 
-    tm = ThreadManager(semaphore_count=threads, delay=delay)
+    tm = ThreadManager(semaphore_count=cores, delay=delay)
     qm = QueryManager(cert=cert, timeout=timeout, directory_path=directory_path, threshold=threshold, thread_manager=tm)
 
     calc.set_max_long_term(max_long_term_storage)
@@ -110,16 +126,116 @@ def main(
             paths[index] = queue.path
 
         if not paths[index] is None:
-            if index == 1:
-                dc.clear_query_results(path=paths[index], step=3600)
-                continue
+            try:
+                step = queries[index].kwargs["params"]["step"]
+            except KeyError:
+                step = 60
 
-            dc.clear_query_results(path=paths[index], step=60)
+            dc.clear_query_results(path=paths[index], step=step)
 
     end = dt.now()
     logger.info("Cleaning data lastet: %s seconds.", (end - start))
 
+    logger.info("Starting to analyze data.")
+    start = dt.now()
+
+    for path in paths:
+        if path is None:
+            continue
+        analyzer.get_mean_duration_per_alertname(path=path)
+
+    end = dt.now()
+    logger.info("Analyzing data lastet: %s seconds.", (end - start))
+
+    for index_path, path in enumerate(paths[0:1]):
+        filtered_data = analyzer.group_alert_timeseries_per_cluster(path=path)
+        start_tt = float(queries[index_path].global_start)
+        end_tt = float(queries[index_path].global_end)
+        correlated_data = analyzer.correlate_data(
+            path=path,
+            result=filtered_data,
+            gap=60,
+            cores=cores,
+            start_tt=start_tt,
+            end_tt=end_tt,
+        )
+        analyzer.create_alert_corrrelation_list(
+            path=path, alerts=correlated_data["alert_index"], matrix=correlated_data["corrcoef_matrix"]
+        )
+
+    return paths
+
+
+def main(
+    api_endpoint: str = None,
+    cert: str = None,
+    timeout: int = None,
+    kwargs: dict = None,
+    directory_path: str = None,
+    threshold: int = None,
+    delay: float = None,
+    cores: int = None,
+    max_long_term_storage: str = None,
+    prometheus_port: int = None,
+    naptime_seconds: int = None,
+    **kkwargs  # additional unused keyword arguments for logging purposes
+):
+    logger.debug("Starting main function with config: %s", CONFIG)
+
+    if kwargs is None:
+        kwargs = {}
+
+    e = Exporter(prometheus_port=prometheus_port, paths=[])
+    exporter_thread = Thread(target=e.start_server)
+    exporter_thread.start()
+
+    to_be_removed_directories = []
+
+    while True:
+        start = dt.now(tz=tz.utc)
+
+        paths = do_analysis(
+            api_endpoint=api_endpoint,
+            cert=cert,
+            timeout=timeout,
+            kwargs=kwargs,
+            directory_path=directory_path,
+            threshold=threshold,
+            delay=delay,
+            cores=cores,
+            max_long_term_storage=max_long_term_storage,
+        )
+
+        e.paths = paths[0:1]
+        e.increase_alertmagnet_analyzing_count()
+        e.update_metrics()
+
+        now = dt.now(tz=tz.utc)
+
+        diff = (start + td(seconds=naptime_seconds)) - now
+
+        time.sleep(diff.seconds)
+
+        to_be_removed_directories.extend(paths)
+
+        if len(to_be_removed_directories) > 2:
+            for path in to_be_removed_directories[:-2]:
+                if path is None:
+                    continue
+
+                if os.path.exists(path):
+                    for root, dirs, files in os.walk(path, topdown=False):
+                        for name in files:
+                            os.remove(os.path.join(root, name))
+                        for name in dirs:
+                            os.rmdir(os.path.join(root, name))
+
+                    os.rmdir(path=path)
+
+                to_be_removed_directories.remove(path)
+
 
 if __name__ == "__main__":
+    load_config()
     setup_logging()
     main(**CONFIG)

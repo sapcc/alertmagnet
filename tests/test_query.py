@@ -3,9 +3,9 @@ import unittest
 from datetime import datetime as dt
 from datetime import timedelta as td
 
-from utilities import Query
+from querying import Query
 
-API_ENDPOINT = "https://www.metrics.region.app.com/api/v1/"
+API_ENDPOINT = "https://metrics-internal.qa-de-1.cloud.sap/api/v1/"
 
 
 class TestQuery(unittest.TestCase):

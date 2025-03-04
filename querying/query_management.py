@@ -57,16 +57,14 @@ from datetime import timezone as tz
 
 import requests
 
+from filtering import data_filter
 from utilities import Calc
 from utilities import errors
-from utilities import data_filter
-from utilities import response_messages
+from querying import response_messages
 from utilities import semaphore
 from utilities.helper import ResponseDummy
 
 logger = logging.getLogger("alertmagnet")
-
-# TODO add META information to query -> QueryGroup
 
 calc = Calc()
 
@@ -128,7 +126,7 @@ class QueryExecutor:
             filename = os.path.join(self.path, f"data{self.chunk}.json")
 
             with open(file=filename, mode="w", encoding="utf-8") as f:
-                f.write(json.dumps(result, indent=4))
+                f.write(json.dumps(result))
         elif result == response_messages.MESSAGE_EXCEEDED_MAXIMUM:
             query1, query2 = self.__split_request_by_half(self.query)
 

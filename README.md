@@ -38,24 +38,12 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Parameter explanation:
-
-- \- a, api endpoint to query against [required]
-- \- c, relative path to the certificate which is used to create the request
-- \- p, directory path in which the query results are stored
-- \- b, Threshold in days which specifies when the data are interpolated by Thanos This helps splitting the queries due to efficiency and resource optimization
-- \- t, number of seconds the client will wait for the server to send a response \[default: 30\]
-
-> [!TIP]
-> Run the following command to get an overview about all available command line parameters
->
-> ```bash
-> python main.py --help
-> ```
-
 ## Config File Information
 
-> The config file is located under `config/config.cfg`. There you have a section `[AlertMagnet]`. All config settings have to be done beneath this section. In the following table are the possbile config settings listed.
+> [!NOTE]
+> To change the location of your config file set an environment variable with the name `ALERTMAGNET_CONFIG_FILE`
+
+> The default config file is located under `config/settings.conf`. There you have a section `[AlertMagnet]`. All config settings have to be done beneath this section. In the following table are the possbile config settings listed.
 
 | setting               | datatype | description                                                                                                                                                  | default / [example value]                    |
 | --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------- |
@@ -65,9 +53,11 @@ Parameter explanation:
 | directory_path        | str      | Directory path in which the query results are stored                                                                                                         | [./data/query_results]                       |
 | threshold             | int      | Threshold in days which specifies when the data are interpolated by Thanos <br> This helps splitting the queries due to efficiency and resource optimization | 90                                           |
 | delay                 | float    | Delay in seconds between each query execution                                                                                                                | 0.25                                         |
-| threads               | int      | Maximum number of threads to use for query execution                                                                                                         | 12                                           |
+| cores                 | int      | Maximum number of threads to use for query execution                                                                                                         | 12                                           |
 | max_long_term_storage | str      | Maximum long term storage following the format <a>y, <b>m, <c>w, <d>d                                                                                        | 1y                                           |
-| log_to_file           | bool     | Toggle which defines whether logs are written into a file.                                                                                                   | False                                        |
+| prometheus_port       | int      | Port on which the exporter exposes the metrics endpoint for prometheus                                                                                       | 8123                                         |
+| naptime_seconds       | int      | Controls in which intervall in seconds the analyzing job should be started                                                                                   | 86400                                        |
+| log_to_file           | bool     | Toggle which defines whether logs are written into a file                                                                                                    | False                                        |
 | log_level             | str      | Log Level -> valid values are \| CRITICAL \| ERROR \| WARNING \| INFO \| DEBUG \|                                                                            | INFO                                         |
 
 > [!NOTE]

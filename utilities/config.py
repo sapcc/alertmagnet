@@ -55,13 +55,23 @@ def __parse_config(conf: dict):
         else:
             conf["delay"] = float(conf["delay"])
 
-        if conf["threads"] == "":
-            conf["threads"] = 12
+        if conf["cores"] == "":
+            conf["cores"] = 12
         else:
-            conf["threads"] = int(conf["threads"])
+            conf["cores"] = int(conf["cores"])
 
         if conf["max_long_term_storage"] == "":
             conf["max_long_term_storage"] = "1y"
+
+        if conf["prometheus_port"] == "":
+            conf["prometheus_port"] = 8123
+        else:
+            conf["prometheus_port"] = int(conf["prometheus_port"])
+
+        if conf["naptime_seconds"] == "":
+            conf["naptime_seconds"] = 86400
+        else:
+            conf["naptime_seconds"] = int(conf["naptime_seconds"])
 
         if conf["log_to_file"].lower() == "true":
             conf["log_to_file"] = True
