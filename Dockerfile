@@ -1,4 +1,4 @@
-FROM keppel.eu-de-1.cloud.sap/ccloud-dockerhub-mirror/library/alpine:3.21.3
+FROM keppel.eu-de-1.cloud.sap/ccloud-dockerhub-mirror/library/alpine:3.21
 LABEL source_repository="https://github.com/sapcc/alertmagnet"
 
 RUN apk upgrade --no-cache --no-progress \
