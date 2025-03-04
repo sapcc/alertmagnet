@@ -95,11 +95,11 @@ class CorrelationAnalyzer(object):
         __store[alert_key] = samples
 
     def collect_alert_samples(self, data: dict, start: float, end: float):
-        print("Creating time samples")
+        logger.info("Creating time samples")
         start_tt = t.time()
 
         for cluster_key, cluster_value in data.items():
-            print(f"Processing cluster: {cluster_key}")
+            logger.debug("Processing cluster: %s", cluster_key)
             __store = {}
             threads = []
             for alert_key, alert_value in cluster_value.items():
@@ -115,7 +115,7 @@ class CorrelationAnalyzer(object):
                 thread.join()
 
             self.data_matrix[cluster_key] = pd.concat(__store, axis=1)
-            print(len(self.data_matrix[cluster_key].columns))
+            logger.debug("cluster %s has %s entries", cluster_key, len(self.data_matrix[cluster_key].columns))
 
         end_tt = t.time()
         logger.info("Creating time samples took: %s", end_tt - start_tt)
