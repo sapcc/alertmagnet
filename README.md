@@ -56,7 +56,8 @@ python main.py
 | cores                 | int      | Maximum number of threads to use for query execution                                                                                                         | 12                                           |
 | max_long_term_storage | str      | Maximum long term storage following the format <a>y, <b>m, <c>w, <d>d                                                                                        | 1y                                           |
 | prometheus_port       | int      | Port on which the exporter exposes the metrics endpoint for prometheus                                                                                       | 8123                                         |
-| log_to_file           | bool     | Toggle which defines whether logs are written into a file.                                                                                                   | False                                        |
+| nap_time              | int      | Controls in which intervall in seconds the analyzing job should be started                                                                                   | 86400                                        |
+| log_to_file           | bool     | Toggle which defines whether logs are written into a file                                                                                                    | False                                        |
 | log_level             | str      | Log Level -> valid values are \| CRITICAL \| ERROR \| WARNING \| INFO \| DEBUG \|                                                                            | INFO                                         |
 
 > [!NOTE]

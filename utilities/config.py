@@ -68,6 +68,11 @@ def __parse_config(conf: dict):
         else:
             conf["prometheus_port"] = int(conf["prometheus_port"])
 
+        if conf["nap_time"] == "":
+            conf["nap_time"] = 86400
+        else:
+            conf["nap_time"] = int(conf["nap_time"])
+
         if conf["log_to_file"].lower() == "true":
             conf["log_to_file"] = True
         else:

@@ -11,6 +11,8 @@ import pathlib
 import time
 
 from datetime import datetime as dt
+from datetime import timedelta as td
+from datetime import timezone as tz
 from threading import Thread
 
 # first party imports
@@ -175,6 +177,7 @@ def main(
     cores: int = None,
     max_long_term_storage: str = None,
     prometheus_port: int = None,
+    nap_time: int = None,
     **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     logger.debug("Starting main function with config: %s", CONFIG)
@@ -189,6 +192,8 @@ def main(
     to_be_removed_directories = []
 
     while True:
+        start = dt.now(tz=tz.utc)
+
         paths = do_analysis(
             api_endpoint=api_endpoint,
             cert=cert,
@@ -205,7 +210,11 @@ def main(
         e.increase_alertmagnet_analyzing_count()
         e.update_metrics()
 
-        time.sleep(60 * 60 * 24)
+        now = dt.now(tz=tz.utc)
+
+        diff = (start + td(seconds=nap_time)) - now
+
+        time.sleep(diff.seconds)
 
         to_be_removed_directories.extend(paths)
 
