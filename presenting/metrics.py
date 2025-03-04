@@ -133,7 +133,7 @@ class Exporter(object):
         1. Constructs the file path for "correlating_alerts.json".
         2. Checks if the file exists. If not, the method returns.
         3. Compares the file's last modification time with the stored last change time for
-           "alertmagnet_correlation_coefficient". If they are the same, the method returns.
+           "alertmagnet_correlation_coefficient". If they are the same, the method returns early.
         4. Opens and reads the JSON data from the file.
         5. Iterates through the alerts and their corresponding correlation values.
         6. Updates the metrics for each alert and its correlating alerts using the provided values.
