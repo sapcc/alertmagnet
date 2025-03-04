@@ -89,12 +89,20 @@ class Exporter(object):
         """
         logger.info("Starting Prometheus exporter on port %s", self.port)
         start_http_server(self.port)
+        self.update_metrics()
 
-        while True:
-            logger.info("Updating metrics")
-            self.update_alertmagnet_important_true_metrics()
-            self.update_alertmagnet_correlation_coefficient_metrics()
-            time.sleep(60)
+    def update_metrics(self):
+        """
+        Updates various metrics for the alert magnet system.
+
+        This method logs the start of the metrics update process and then
+        calls the following methods to update specific metrics:
+        - update_alertmagnet_important_true_metrics: Updates metrics related to important true alerts.
+        - update_alertmagnet_correlation_coefficient_metrics: Updates metrics related to correlation coefficients.
+        """
+        logger.info("Updating metrics")
+        self.update_alertmagnet_important_true_metrics()
+        self.update_alertmagnet_correlation_coefficient_metrics()
 
     def update_alertmagnet_important_true_metrics(self):
         """
