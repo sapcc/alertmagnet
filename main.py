@@ -146,7 +146,7 @@ def do_analysis(
     logger.info("Analyzing data lastet: %s seconds.", (end - start))
 
     for index_path, path in enumerate(paths[0:1]):
-        filtered_data = analyzer.filter_data(path=path)
+        filtered_data = analyzer.group_alert_timeseries_per_cluster(path=path)
         start_tt = queries[index_path].global_start
         end_tt = queries[index_path].global_end
         correlated_data = analyzer.correlate_data(

@@ -30,7 +30,7 @@ from analyzing import filtering, CorrelationAnalyzer, get_mean_duration_per_aler
 logger = logging.getLogger("alertmagnet")
 
 
-def filter_data(path: str) -> dict:
+def group_alert_timeseries_per_cluster(path: str) -> dict:
     """
     Filters data from the given path and returns the result as a dictionary.
 
@@ -142,7 +142,7 @@ def get_correlating_alerts(path: str, gap: int, cores: int, start_tt: float, end
     Returns:
         list: A list of correlating alerts.
     """
-    filtered_data = filter_data(path=path)
+    filtered_data = group_alert_timeseries_per_cluster(path=path)
     correlated_data = correlate_data(
         path=path, result=filtered_data, gap=gap, cores=cores, start_tt=start_tt, end_tt=end_tt
     )
