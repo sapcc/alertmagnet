@@ -14,7 +14,6 @@ Functions:
 import json
 import logging
 import os
-import time
 
 
 from prometheus_client import start_http_server
