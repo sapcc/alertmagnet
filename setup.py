@@ -1,9 +1,10 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="main",
     version="0.1.0",
-    py_modules=["main", "analyzing", "extension", "filtering", "presenting", "querying", "utilities"],
+    packages=find_packages(),
+    py_modules=["main"],
     install_requires=[
         "pandas",
         "prometheus-client",
