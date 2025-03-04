@@ -8,10 +8,6 @@ from filtering.data_filter import create_time_ranges
 
 logger = logging.getLogger("alertmagnet")
 
-logger = logging.getLogger("alertmagnet")
-
-logger = logging.getLogger("alertmagnet")
-
 
 class DataCleaner(object):
     def __init__(self):
