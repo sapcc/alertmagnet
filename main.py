@@ -147,8 +147,8 @@ def do_analysis(
 
     for index_path, path in enumerate(paths[0:1]):
         filtered_data = analyzer.group_alert_timeseries_per_cluster(path=path)
-        start_tt = queries[index_path].global_start
-        end_tt = queries[index_path].global_end
+        start_tt = float(queries[index_path].global_start)
+        end_tt = float(queries[index_path].global_end)
         correlated_data = analyzer.correlate_data(
             path=path,
             result=filtered_data,
@@ -202,6 +202,7 @@ def main(
         )
 
         e.paths = paths[0:1]
+        e.update_metrics()
 
         time.sleep(60 * 60 * 24)
 
