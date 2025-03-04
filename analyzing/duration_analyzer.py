@@ -2,7 +2,7 @@
 This module provides functionality to analyze alert durations from JSON data.
 
 Functions:
-    __get_data(path: str) -> dict:
+    __get_queried_data_from_json(path: str) -> dict:
         Reads JSON data from a file and returns it as a dictionary.
         Args:
             path (str): The directory path where the JSON file is located.
@@ -18,7 +18,7 @@ Functions:
         Returns:
             dict: A dictionary with alert names as keys and their mean durations as values.
 
-    __write_data(data: dict, out: str):
+    __write_calculated_data_to_json(data: dict, out: str):
         Writes the given data to a JSON file.
         Args:
             data (dict): The data to be written to the file.
@@ -40,7 +40,7 @@ import os
 logger = logging.getLogger("alertmagnet")
 
 
-def __get_data(path: str):
+def __get_queried_data_from_json(path: str):
     filename = os.path.join(path, "finalData.json")
 
     if not os.path.exists(filename):
@@ -70,7 +70,7 @@ def __calc_mean_duration_per_alertname(results: dict):
     return alerts
 
 
-def __write_data(data: dict, path: str):
+def __write_calculated_data_to_json(data: dict, path: str):
     out = os.path.join(path, "alertMeanDurations.json")
 
     with open(file=out, mode="w", encoding="utf-8") as f:
@@ -88,8 +88,8 @@ def get_mean_duration_per_alertname(path: str):
     Returns:
         dict: A dictionary containing the mean duration per alert name.
     """
-    data = __get_data(path=path)
+    data = __get_queried_data_from_json(path=path)
     results = __calc_mean_duration_per_alertname(results=data)
-    __write_data(data=results, path=path)
+    __write_calculated_data_to_json(data=results, path=path)
 
     return results
