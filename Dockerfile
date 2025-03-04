@@ -1,8 +1,8 @@
 FROM keppel.eu-de-1.cloud.sap/ccloud-dockerhub-mirror/library/alpine:3.21.3
 LABEL source_repository="https://github.com/sapcc/alertmagnet"
 
-RUN apk --update add python3 bash git py3-setuptools
-RUN apk upgrade -U 
+RUN apk upgrade --no-cache --no-progress \
+  && apk add --no-cache --no-progress python3 bash git py3-setuptools
 
 RUN git clone https://github.com/sapcc/alertmagnet.git
 WORKDIR /alertmagnet
