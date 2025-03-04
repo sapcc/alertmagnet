@@ -225,6 +225,9 @@ class CorrelationAnalyzer(object):
                 self.matrix[self.alerts.index(alert_1[0])][self.alerts.index(alert_2[0])][0] += float(res)
                 self.matrix[self.alerts.index(alert_1[0])][self.alerts.index(alert_2[0])][1] += 1
 
+                self.matrix[self.alerts.index(alert_2[0])][self.alerts.index(alert_1[0])][0] += float(res)
+                self.matrix[self.alerts.index(alert_2[0])][self.alerts.index(alert_1[0])][1] += 1
+
             indent += 1
 
         logger.info("Finished cluster: %s", cluster_name)
