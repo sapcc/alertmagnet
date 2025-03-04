@@ -165,6 +165,7 @@ def main(
     delay: float = None,
     threads: int = None,
     max_long_term_storage: str = None,
+    prometheus_port: int = None,
     **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     logger.debug("Starting main function with config: %s", CONFIG)
@@ -172,7 +173,7 @@ def main(
     if kwargs is None:
         kwargs = {}
 
-    e = Exporter(prometheus_port=8123, paths=[])
+    e = Exporter(prometheus_port=prometheus_port, paths=[])
     exporter_thread = Thread(target=e.start_server)
     exporter_thread.start()
 

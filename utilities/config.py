@@ -63,6 +63,11 @@ def __parse_config(conf: dict):
         if conf["max_long_term_storage"] == "":
             conf["max_long_term_storage"] = "1y"
 
+        if conf["prometheus_port"] == "":
+            conf["prometheus_port"] = 8123
+        else:
+            conf["prometheus_port"] = int(conf["prometheus_port"])
+
         if conf["log_to_file"].lower() == "true":
             conf["log_to_file"] = True
         else:
