@@ -203,7 +203,7 @@ def main(
 
         e.paths = paths[0:1]
 
-        time.sleep(60 * 60 * 24)  # run for a week
+        time.sleep(60 * 60 * 24)
 
         to_be_removed_directories.extend(paths)
 
