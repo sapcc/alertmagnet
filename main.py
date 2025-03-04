@@ -177,7 +177,7 @@ def main(
     cores: int = None,
     max_long_term_storage: str = None,
     prometheus_port: int = None,
-    nap_time: int = None,
+    naptime_seconds: int = None,
     **kkwargs  # additional unused keyword arguments for logging purposes
 ):
     logger.debug("Starting main function with config: %s", CONFIG)
@@ -212,7 +212,7 @@ def main(
 
         now = dt.now(tz=tz.utc)
 
-        diff = (start + td(seconds=nap_time)) - now
+        diff = (start + td(seconds=naptime_seconds)) - now
 
         time.sleep(diff.seconds)
 
